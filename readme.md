@@ -10,7 +10,7 @@ See the [project presentation slides](https://academia.jansensan.net/30853/tenni
 ## Collaborators
 
 - [Mat JANSON BLANCHET](https://jansensan.net)
-- [Pablo MONROY D'CRUZ]()
+- [Pablo MONROY D'CROZ](https://www.linkedin.com/in/pamonroy/)
 - [Natasha TYLOSKY](https://www.natashatylosky.com/)
 
 
