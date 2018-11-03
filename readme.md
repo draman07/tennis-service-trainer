@@ -1,5 +1,7 @@
 # Tennis Service Trainer
 
+![](https://img.shields.io/badge/Academic%20Project%20%E2%80%94%20Advanced%20Interface%20Design-In%20Progress-green.svg)
+
 ![](./documentation/assets/concept-sketch.jpg)
 
 Sources of the Tennis Service Trainer project.
