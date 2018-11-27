@@ -14,6 +14,6 @@ class GyroData {
   GyroData() {}
   
   void init() {
-    this.isInit = false;
+    this.isInit = true;
   }
 }
