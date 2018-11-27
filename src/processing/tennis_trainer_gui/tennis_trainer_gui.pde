@@ -161,6 +161,7 @@ void pullDataFromPort() {
     }
     
     if (g.isInit) {
+      println(g.toString());
       sendToWekinator(g);
     }
   }
