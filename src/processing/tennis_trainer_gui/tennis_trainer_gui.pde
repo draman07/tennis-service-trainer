@@ -15,14 +15,19 @@ PVector center;
 // control vars
 int BUTTON_WIDTH = 128;
 int BUTTON_HEIGHT = 32;
-String START_WEKI_LABEL = "Start Wekinator";
-String STOP_WEKI_LABEL = "Stop Wekinator";
 
 ControlP5 ctrl;
+
+// wekinator control vars
+String START_WEKI_LABEL = "Start Wekinator";
+String STOP_WEKI_LABEL = "Stop Wekinator";
 Button startWekiButton;
 Button stopWekiButton;
-
 Boolean isRecording = false;
+
+// node/save to file control vars
+String CHECKBOX_LABEL = "Save to file";
+CheckBox saveToFileCheckbox;
 
 
 // wifi vars
@@ -41,9 +46,9 @@ Serial port;
 
 // osc vars
 String WEKINATOR_ADDRESS = "127.0.0.1";
-String WEKINATOR_MESSAGE = "/wek/gyro";
+String WEKINATOR_MESSAGE = "/wek/inputs";
 int LISTENING_PORT = 32000;
-int BROADCASTING_PORT = 48000;
+int BROADCASTING_PORT = 6448;
 OscP5 osc;
 NetAddress wekinator;
 
@@ -92,6 +97,17 @@ void initGUI() {
   stopWekiButton = ctrl.addButton(STOP_WEKI_LABEL)
     .setSize(BUTTON_WIDTH, BUTTON_HEIGHT)
     .setPosition(buttonX, buttonY);
+    
+  // save to file checkbox
+  buttonX += BUTTON_WIDTH + margin;
+  saveToFileCheckbox = ctrl.addCheckBox("checkbox")
+    .setPosition(buttonX, buttonY)
+    .setColorForeground(color(120))
+    .setColorActive(color(255))
+    .setColorLabel(color(255))
+    .setSize(32, 32)
+    .setItemsPerRow(1)
+    .addItem(CHECKBOX_LABEL, 0);
 }
 
 void initOSC() {
