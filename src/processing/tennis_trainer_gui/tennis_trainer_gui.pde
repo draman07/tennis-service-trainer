@@ -47,8 +47,8 @@ Serial port;
 // osc vars
 String WEKINATOR_ADDRESS = "127.0.0.1";
 String WEKINATOR_MESSAGE = "/wek/inputs";
-int LISTENING_PORT = 32000;
-int BROADCASTING_PORT = 6448;
+int LISTENING_PORT = 12000;
+int WEKINATOR_PORT = 6448;
 OscP5 osc;
 NetAddress wekinator;
 
@@ -112,7 +112,7 @@ void initGUI() {
 
 void initOSC() {
   osc = new OscP5(this, LISTENING_PORT);
-  wekinator = new NetAddress(WEKINATOR_ADDRESS, BROADCASTING_PORT);
+  wekinator = new NetAddress(WEKINATOR_ADDRESS, WEKINATOR_PORT);
 }
 
 void initSerialPort() {
