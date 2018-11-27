@@ -53,7 +53,7 @@ OscP5 osc;
 NetAddress wekinator;
 
 
-// processing setup
+// PROCESSING SETUP
 void setup() {
   size(640, 360);
   center = new PVector(width * 0.5, height * 0.5);
@@ -78,7 +78,7 @@ void draw() {
 }
 
 
-// methods definitions
+// METHODS DEFINITIONS
 void initGUI() {
   int margin = 16;
   int buttonX = margin;
@@ -178,4 +178,28 @@ void sendToWekinator(GyroData g) {
   message.add(g.accelZ);
   
   osc.send(message, wekinator);
+}
+
+void startSendingToWeki() {
+  println("start gyro data sending to Wekinator @ " + WEKINATOR_ADDRESS + WEKINATOR_MESSAGE); 
+  isRecording = true;
+}
+
+void stopSendingToWeki() {
+  println("stop sending gyro data to Wekinator");
+  isRecording = false;
+}
+
+
+// EVENT HANDLERS
+void controlEvent(ControlEvent event) {
+  String controlName = event.getController().getName();
+  
+  // weki
+  if (controlName == START_WEKI_LABEL) {
+    startSendingToWeki();
+  }
+  if (controlName == STOP_WEKI_LABEL) {
+    stopSendingToWeki();
+  }
 }
