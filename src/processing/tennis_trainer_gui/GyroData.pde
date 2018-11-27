@@ -16,4 +16,15 @@ class GyroData {
   void init() {
     this.isInit = true;
   }
+  
+  String toString() {
+    return "[GyroData "
+      + "gyroX: " + this.gyroX + ", "
+      + "gyroY: " + this.gyroY + ", "
+      + "gyroZ: " + this.gyroZ + ", "
+      + "accelX: " + this.accelX + ", "
+      + "accelY: " + this.accelY + ", "
+      + "accelZ: " + this.accelZ
+      + "]";
+  }
 }
