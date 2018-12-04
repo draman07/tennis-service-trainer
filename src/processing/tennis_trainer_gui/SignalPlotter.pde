@@ -2,22 +2,22 @@ class SignalPlotter {
 
   // constants
   color MONITOR_FRAME = color(130, 27, 0, 100);
-  
+
   // positions variables
   int x;
   int y;
   int w;
   int h;
   float stepSize;
-  
+
   // values variables
   float[] values;
   int historyLength;
   int index;
 
   color signalColor;
-  
-  
+
+
   // constructor
   SignalPlotter(int _x, int _y, int _w, int _h, int _hl, color _c) {
     // assign params
@@ -33,8 +33,8 @@ class SignalPlotter {
     index = 0;
     stepSize = w / (float)historyLength;
   }
-  
-  
+
+
   // methods definitions
   float[] addAtEnd(float[] array, float value) {
     float[] updatedArray = new float[array.length];
@@ -53,28 +53,7 @@ class SignalPlotter {
     
     return updatedArray;
   }
-  
-  float[] getComparedValues(float[] otherValues) {
-    // error checking
-    if (otherValues.length != historyLength) {
-      println(
-        "Error at SignalPlotter#getComparedValues: "
-        + "The array of values must be of the same length as historyLength"
-      );
-      return null;
-    }
 
-    // create return values
-    float[] comparedValues = new float[historyLength];
-    
-    // loop through values
-    for(int i = 0; i < historyLength; i++) {
-      comparedValues[i] = otherValues[i] - values[i];
-    }
-    
-    return comparedValues;
-  }
-  
   void draw() {
     if (values.length == 0) {
       return;
@@ -100,7 +79,48 @@ class SignalPlotter {
       );
     }
   }
-  
+
+  float[] getComparedValues(float[] otherValues) {
+    // error checking
+    if (otherValues.length != historyLength) {
+      println(
+        "Error at SignalPlotter#getComparedValues: "
+        + "The array of values must be of the same length as historyLength"
+      );
+      return null;
+    }
+
+    // create return values
+    float[] comparedValues = new float[historyLength];
+    
+    // loop through values
+    for(int i = 0; i < historyLength; i++) {
+      comparedValues[i] = otherValues[i] - values[i];
+    }
+    
+    return comparedValues;
+  }
+
+  float getMean() {
+    float sum = 0;
+    for (int i = 0; i < historyLength; i++) {
+      sum += values[i];
+    }
+    return sum / historyLength;
+  }
+
+  float[] getRange() {
+    float[] r = new float[2];
+    r[0] = min(values);
+    r[1] = max(values);
+    return r;
+  }
+
+  float getRangeSize() {
+    float[] r = getRange();
+    return abs(r[1] - r[0]);
+  }
+
   void setValues(float[] newValues) {
     if (newValues.length != historyLength) {
       println(
@@ -112,7 +132,7 @@ class SignalPlotter {
     
     values = newValues;
   }
-  
+
   void update(float newValue) {
     values = addAtEnd(values, newValue);
   }
