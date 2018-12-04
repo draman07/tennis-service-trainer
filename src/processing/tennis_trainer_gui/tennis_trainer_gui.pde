@@ -14,12 +14,13 @@ int BUTTON_HEIGHT = 32;
 
 ControlP5 ctrl;
 
-// wekinator control vars
+// control vars
 String START_REC_LABEL = "Start Recording";
 String STOP_REC_LABEL = "Stop Recording";
 Button startRecButton;
 Button stopRecButton;
 Boolean isRecording = false;
+Boolean hasRecording = false;
 
 
 // port vars
@@ -37,42 +38,76 @@ JSONObject json;
 
 // signal monitors
 SignalPlotter[] gyroMonitors;
+SignalPlotter[] gyroRecorders;
+SignalPlotter[] gyroComparators;
+
 SignalPlotter[] accelMonitors;
 float gyroScale = 1000.;
+
+// float meanGX = null;
+// float lowestMeanGX = null;
 
 
 // PROCESSING SETUP
 void setup() {
-  size(640, 360);
+  size(640, 720);
   center = new PVector(width * 0.5, height * 0.5);
   
   initSerialPort();
   initGUI();
   initGyroMonitors();
+  initGyroRecorders();
+  initGyroComparators();
 }
 
 void draw() {
   // draw bg
   background(20);
   
-  if (isRecording) {
-    // pull from port
-    while (port.available() > 0) {
-      GyroData g = pullDataFromPort();
+  // pull data from port
+  while (port.available() > 0) {
+    GyroData g = pullDataFromPort();
+    
+    if (g != null && g.isInit) {
+      //addToJSON(g);
       
-      if (g != null && g.isInit) {
-        //addToJSON(g);
-        
-        gyroMonitors[0].update(g.gyroX / gyroScale);
-        gyroMonitors[1].update(g.gyroY / gyroScale);
-        gyroMonitors[2].update(g.gyroZ / gyroScale);
-      }
+      gyroMonitors[0].update(g.gyroX / gyroScale);
+      gyroMonitors[1].update(g.gyroY / gyroScale);
+      gyroMonitors[2].update(g.gyroZ / gyroScale);
     }
   }
+
+  if (isRecording) {
+    gyroRecorders[0].setValues(gyroMonitors[0].values);
+    gyroRecorders[1].setValues(gyroMonitors[1].values);
+    gyroRecorders[2].setValues(gyroMonitors[2].values);
+  }
   
+  if (hasRecording) {
+    gyroComparators[0].setValues(gyroRecorders[0].getComparedValues(gyroMonitors[0].values));
+    gyroComparators[1].setValues(gyroRecorders[1].getComparedValues(gyroMonitors[1].values));
+    gyroComparators[2].setValues(gyroRecorders[2].getComparedValues(gyroMonitors[2].values));
+
+    // float oldMean = meanGX;
+    // meanGX = getMean(gyroComparators[0].values);
+    // lowestMeanGX = min(oldMean, meanGX);
+    // println("current: " + meanGX + ", lowest: " + lowestMeanGX);
+  }
+  
+  // draw monitors
   gyroMonitors[0].draw();
   gyroMonitors[1].draw();
   gyroMonitors[2].draw();
+  
+  // draw recorders
+  gyroRecorders[0].draw();
+  gyroRecorders[1].draw();
+  gyroRecorders[2].draw();
+  
+  // draw comparators
+  gyroComparators[0].draw();
+  gyroComparators[1].draw();
+  gyroComparators[2].draw();
 }
 
 
@@ -91,6 +126,14 @@ void addToJSON(GyroData g) {
     + "az:" + g.accelZ
     + "'timestamp':" + now.getTime()
   + "},";
+}
+
+float getMean(float[] array) {
+  float sum = 0;
+  for (int i = 0; i < array.length; i++) {
+    sum += array[i];
+  }
+  return sum / array.length;
 }
 
 void initGUI() {
@@ -141,6 +184,62 @@ void initGyroMonitors() {
   );
 }
 
+void initGyroRecorders() {
+  int monitorX = 16;
+  int monitorY = 320;
+  int monitorW = width - 32;
+  int monitorH = 100;
+  int histLen = 100;
+  
+  gyroRecorders = new SignalPlotter[3]; // x, y, z
+  gyroRecorders[0] = new SignalPlotter(
+    monitorX, monitorY,
+    monitorW, monitorH,
+    histLen,
+    color(204, 255, 0)
+  );
+  gyroRecorders[1] = new SignalPlotter(
+    monitorX, monitorY,
+    monitorW, monitorH,
+    histLen,
+    color(255, 204, 0)
+  );
+  gyroRecorders[2] = new SignalPlotter(
+    monitorX, monitorY,
+    monitorW, monitorH,
+    histLen,
+    color(204, 0, 255)
+  );
+}
+
+void initGyroComparators() {
+  int monitorX = 16;
+  int monitorY = 480;
+  int monitorW = width - 32;
+  int monitorH = 100;
+  int histLen = 100;
+  
+  gyroComparators = new SignalPlotter[3]; // x, y, z
+  gyroComparators[0] = new SignalPlotter(
+    monitorX, monitorY,
+    monitorW, monitorH,
+    histLen,
+    color(204, 255, 0)
+  );
+  gyroComparators[1] = new SignalPlotter(
+    monitorX, monitorY,
+    monitorW, monitorH,
+    histLen,
+    color(255, 204, 0)
+  );
+  gyroComparators[2] = new SignalPlotter(
+    monitorX, monitorY,
+    monitorW, monitorH,
+    histLen,
+    color(204, 0, 255)
+  );
+}
+
 void initSerialPort() {
   // see https://www.processing.org/reference/libraries/serial/Serial_read_.html
   
@@ -158,10 +257,6 @@ void initSerialPort() {
   port.bufferUntil('\n');
 }
 
-void initWiFi() {
-  // TODO
-}
-
 GyroData parsePortData(String raw) {
   // data structure: GyroX, GyroY, GyroZ, AccelX, AccelY, AccelZ
   String temp[] = raw.split(",");
@@ -169,6 +264,9 @@ GyroData parsePortData(String raw) {
   GyroData g = new GyroData();
 
   if (temp.length == GYRO_DATA_LENGTH) {
+    g.gyroX = float(temp[0]);
+    g.gyroY = float(temp[1]);
+    g.gyroZ = float(temp[2]);
     g.accelX = float(temp[3]);
     g.accelY = float(temp[4]);
     g.accelZ = float(temp[5]);
@@ -180,7 +278,6 @@ GyroData parsePortData(String raw) {
   }
 
   g.init();
-  println(g.toString());
 
   return g;
 }
@@ -211,8 +308,9 @@ void startRecording() {
 void stopRecording() {
   println("stop recording");
   
-  // set flag
+  // set flags
   isRecording = false;
+  hasRecording = true;
   
   // save json to file
   // TODO
