@@ -69,7 +69,7 @@ class SignalPlotter {
     
     // loop through values
     for(int i = 0; i < historyLength; i++) {
-      comparedValues[i] = values[i] - otherValues[i];
+      comparedValues[i] = otherValues[i] - values[i];
     }
     
     return comparedValues;
