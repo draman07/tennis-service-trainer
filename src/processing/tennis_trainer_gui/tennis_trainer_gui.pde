@@ -9,16 +9,16 @@ PVector center;
 
 
 // control vars
+ControlP5 ctrl;
+
 int BUTTON_WIDTH = 128;
 int BUTTON_HEIGHT = 32;
 
-ControlP5 ctrl;
-
-// control vars
 String START_REC_LABEL = "Start Recording";
 String STOP_REC_LABEL = "Stop Recording";
 Button startRecButton;
 Button stopRecButton;
+
 Boolean isRecording = false;
 Boolean hasRecording = false;
 
@@ -41,8 +41,9 @@ SignalPlotter[] gyroMonitors;
 SignalPlotter[] gyroRecorders;
 SignalPlotter[] gyroComparators;
 
-SignalPlotter[] accelMonitors;
-float gyroScale = 1000.;
+// SignalPlotter[] accelMonitors;
+int HISTORY_LENGTH = 160;
+float GYRO_SCALE = 1000.;
 
 // float meanGX = null;
 // float lowestMeanGX = null;
@@ -71,9 +72,9 @@ void draw() {
     if (g != null && g.isInit) {
       //addToJSON(g);
       
-      gyroMonitors[0].update(g.gyroX / gyroScale);
-      gyroMonitors[1].update(g.gyroY / gyroScale);
-      gyroMonitors[2].update(g.gyroZ / gyroScale);
+      gyroMonitors[0].update(g.gyroX / GYRO_SCALE);
+      gyroMonitors[1].update(g.gyroY / GYRO_SCALE);
+      gyroMonitors[2].update(g.gyroZ / GYRO_SCALE);
     }
   }
 
@@ -161,25 +162,24 @@ void initGyroMonitors() {
   int monitorY = 160;
   int monitorW = width - 32;
   int monitorH = 100;
-  int histLen = 100;
   
   gyroMonitors = new SignalPlotter[3]; // x, y, z
   gyroMonitors[0] = new SignalPlotter(
     monitorX, monitorY,
     monitorW, monitorH,
-    histLen,
+    HISTORY_LENGTH,
     color(204, 255, 0)
   );
   gyroMonitors[1] = new SignalPlotter(
     monitorX, monitorY,
     monitorW, monitorH,
-    histLen,
+    HISTORY_LENGTH,
     color(255, 204, 0)
   );
   gyroMonitors[2] = new SignalPlotter(
     monitorX, monitorY,
     monitorW, monitorH,
-    histLen,
+    HISTORY_LENGTH,
     color(204, 0, 255)
   );
 }
@@ -189,25 +189,24 @@ void initGyroRecorders() {
   int monitorY = 320;
   int monitorW = width - 32;
   int monitorH = 100;
-  int histLen = 100;
   
   gyroRecorders = new SignalPlotter[3]; // x, y, z
   gyroRecorders[0] = new SignalPlotter(
     monitorX, monitorY,
     monitorW, monitorH,
-    histLen,
+    HISTORY_LENGTH,
     color(204, 255, 0)
   );
   gyroRecorders[1] = new SignalPlotter(
     monitorX, monitorY,
     monitorW, monitorH,
-    histLen,
+    HISTORY_LENGTH,
     color(255, 204, 0)
   );
   gyroRecorders[2] = new SignalPlotter(
     monitorX, monitorY,
     monitorW, monitorH,
-    histLen,
+    HISTORY_LENGTH,
     color(204, 0, 255)
   );
 }
@@ -217,25 +216,24 @@ void initGyroComparators() {
   int monitorY = 480;
   int monitorW = width - 32;
   int monitorH = 100;
-  int histLen = 100;
   
   gyroComparators = new SignalPlotter[3]; // x, y, z
   gyroComparators[0] = new SignalPlotter(
     monitorX, monitorY,
     monitorW, monitorH,
-    histLen,
+    HISTORY_LENGTH,
     color(204, 255, 0)
   );
   gyroComparators[1] = new SignalPlotter(
     monitorX, monitorY,
     monitorW, monitorH,
-    histLen,
+    HISTORY_LENGTH,
     color(255, 204, 0)
   );
   gyroComparators[2] = new SignalPlotter(
     monitorX, monitorY,
     monitorW, monitorH,
-    histLen,
+    HISTORY_LENGTH,
     color(204, 0, 255)
   );
 }
