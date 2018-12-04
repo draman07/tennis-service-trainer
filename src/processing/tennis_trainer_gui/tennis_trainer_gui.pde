@@ -89,10 +89,20 @@ void draw() {
     gyroComparators[1].setValues(gyroRecorders[1].getComparedValues(gyroMonitors[1].values));
     gyroComparators[2].setValues(gyroRecorders[2].getComparedValues(gyroMonitors[2].values));
 
+    float gxError = getErrorSum(gyroComparators[0].values);
+    float gyError = getErrorSum(gyroComparators[0].values);
+    float gzError = getErrorSum(gyroComparators[0].values);
+
+    println("errors: " + gxError + ", " + gyError + ", " + gzError);
+    println("errors sum: " + (gxError + gyError + gzError));
+
     // float oldMean = meanGX;
     // meanGX = getMean(gyroComparators[0].values);
     // lowestMeanGX = min(oldMean, meanGX);
-    // println("current: " + meanGX + ", lowest: " + lowestMeanGX);
+    // println("current: " + gyroComparators[0].getMean());
+    // float[] r = gyroComparators[0].getRange();
+    // println("current range min: " + r[0] + ", max: " + r[1]);
+    // println("range size: " + gyroComparators[0].getRangeSize());
   }
   
   // draw monitors
@@ -127,6 +137,14 @@ void addToJSON(GyroData g) {
     + "az:" + g.accelZ
     + "'timestamp':" + now.getTime()
   + "},";
+}
+
+float getErrorSum(float[] a) {
+  float sum = 0;
+  for (int i = 0; i < a.length; i++) {
+    sum += abs(a[i]);
+  };
+  return sum / a.length;
 }
 
 float getMean(float[] array) {
