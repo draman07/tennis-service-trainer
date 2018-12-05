@@ -45,8 +45,17 @@ SignalPlotter[] gyroComparators;
 int HISTORY_LENGTH = 160;
 float GYRO_SCALE = 1000.;
 
-// float meanGX = null;
-// float lowestMeanGX = null;
+// match variables
+boolean isSumSet = false;
+float errorsSum = -1.;
+float lowestErrorsSum = -1.;
+float THRESHOLD_COEFFICIENT = 1.75;
+
+// match timer
+boolean isMatchingAvailable = false;
+int delayStart = -1;
+int delayEnd = -1;
+int DELAY_FOR_NEXT_MATCH = 500; // ms
 
 
 // PROCESSING SETUP
@@ -89,22 +98,16 @@ void draw() {
     gyroComparators[1].setValues(gyroRecorders[1].getComparedValues(gyroMonitors[1].values));
     gyroComparators[2].setValues(gyroRecorders[2].getComparedValues(gyroMonitors[2].values));
 
-    float gxError = getErrorSum(gyroComparators[0].values);
-    float gyError = getErrorSum(gyroComparators[0].values);
-    float gzError = getErrorSum(gyroComparators[0].values);
+    if (isMatchingAvailable) {
+      if (areSignalsMatching()) {
+        startMatchDelay();
+        println("MATCH!");
+      }
+    }
 
-    println("errors: " + gxError + ", " + gyError + ", " + gzError);
-    println("errors sum: " + (gxError + gyError + gzError));
-
-    // float oldMean = meanGX;
-    // meanGX = getMean(gyroComparators[0].values);
-    // lowestMeanGX = min(oldMean, meanGX);
-    // println("current: " + gyroComparators[0].getMean());
-    // float[] r = gyroComparators[0].getRange();
-    // println("current range min: " + r[0] + ", max: " + r[1]);
-    // println("range size: " + gyroComparators[0].getRangeSize());
+    checkMatchAvailability();
   }
-  
+
   // draw monitors
   gyroMonitors[0].draw();
   gyroMonitors[1].draw();
@@ -137,6 +140,48 @@ void addToJSON(GyroData g) {
     + "az:" + g.accelZ
     + "'timestamp':" + now.getTime()
   + "},";
+}
+
+boolean areSignalsMatching() {
+  boolean isMatch = false;
+
+  // calculate errors sum
+  float gxError = getErrorSum(gyroComparators[0].values);
+  float gyError = getErrorSum(gyroComparators[0].values);
+  float gzError = getErrorSum(gyroComparators[0].values);
+  errorsSum = gxError + gyError + gzError;
+
+  // perfect match is impossible,
+  // wait for a sum to be more than 0 before setting anything
+  if (errorsSum > 0.) {
+    if (isSumSet) {
+      lowestErrorsSum = min(lowestErrorsSum, errorsSum);
+    } else {
+      lowestErrorsSum = errorsSum;
+    }
+  }
+
+  // println("errors sum: " + errorsSum);
+  // println("lowest errors sum: " + lowestErrorsSum);
+
+  if (errorsSum <= lowestErrorsSum * THRESHOLD_COEFFICIENT) {
+    isMatch = true;
+  }
+
+  // set flag after first past
+  isSumSet = true;
+
+  return isMatch;
+}
+
+void checkMatchAvailability() {
+  if (!isMatchingAvailable) {
+    if (millis() > delayEnd) {
+      isMatchingAvailable = true;
+      delayStart = -1;
+      delayEnd = -1;
+    }
+  }
 }
 
 float getErrorSum(float[] a) {
@@ -305,6 +350,13 @@ GyroData pullDataFromPort() {
     g = parsePortData(incoming);
   }
   return g;
+}
+
+void startMatchDelay() {
+  isMatchingAvailable = false;
+
+  delayStart = millis();
+  delayEnd = delayStart + DELAY_FOR_NEXT_MATCH;
 }
 
 void startRecording() {
