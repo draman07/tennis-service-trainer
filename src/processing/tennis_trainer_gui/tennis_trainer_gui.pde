@@ -377,7 +377,9 @@ GyroData pullDataFromPort() {
 }
 
 void setMatchThreshold() {
-  matchThreshold = matchThresholdSlider.getValue();
+  if (matchThresholdSlider != null) {
+    matchThreshold = matchThresholdSlider.getValue();
+  }
 }
 
 void startMatchDelay() {
