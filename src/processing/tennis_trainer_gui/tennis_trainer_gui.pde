@@ -16,11 +16,21 @@ int BUTTON_HEIGHT = 32;
 
 String START_REC_LABEL = "Start Recording";
 String STOP_REC_LABEL = "Stop Recording";
-String SLIDER_LABEL = "Match Threshold";
+Slider matchThresholdSlider;
 
+String SLIDER_LABEL = "Match Threshold";
 Button startRecButton;
 Button stopRecButton;
-Slider matchThresholdSlider;
+
+String START_SIM_LABEL = "Start Simulation";
+String STOP_SIM_LABEL = "Stop Simulation";
+String RESET_SIM_LABEL = "Reset Simulation";
+Button startSimButton;
+Button stopSimButton;
+Button resetSimButton;
+Boolean isSimulatingSignal = false;
+float sineStep = 0;
+float sineValue = 0;
 
 Boolean isRecording = false;
 Boolean hasRecording = false;
@@ -49,13 +59,13 @@ int HISTORY_LENGTH = 160;
 float GYRO_SCALE = 1000.;
 
 // match variables
-boolean isSumSet = false;
+Boolean isSumSet = false;
 float errorsSum = -1.;
 float lowestErrorsSum = -1.;
 float matchThreshold = 1.75;
 
 // match timer
-boolean isMatchingAvailable = false;
+Boolean isMatchingAvailable = false;
 int delayStart = -1;
 int delayEnd = -1;
 int DELAY_FOR_NEXT_MATCH = 500; // ms
@@ -90,6 +100,14 @@ void draw() {
         gyroMonitors[2].update(g.gyroZ / GYRO_SCALE);
       }
     }
+  }
+
+  if (isSimulatingSignal) {
+    sineStep += 0.1;
+    sineValue = sin(sineStep);
+    gyroMonitors[0].update(sineValue);
+    gyroMonitors[1].update(sineValue);
+    gyroMonitors[2].update(sineValue);
   }
 
   if (isRecording) {
@@ -147,8 +165,8 @@ void addToJSON(GyroData g) {
   + "},";
 }
 
-boolean areSignalsMatching() {
-  boolean isMatch = false;
+Boolean areSignalsMatching() {
+  Boolean isMatch = false;
 
   // calculate errors sum
   float gxError = getErrorSum(gyroComparators[0].values);
@@ -211,19 +229,20 @@ void initGUI() {
   int buttonY = 0;
   ctrl = new ControlP5(this);
   
-  // start weki button
+  // start recording button
   buttonX = margin;
-  buttonY = height - (BUTTON_HEIGHT + margin);
+  buttonY = height - 2 * (BUTTON_HEIGHT + margin);
   startRecButton = ctrl.addButton(START_REC_LABEL)
     .setSize(BUTTON_WIDTH, BUTTON_HEIGHT)
     .setPosition(buttonX, buttonY);
   
-  // stop weki button
+  // stop recording button
   buttonX += BUTTON_WIDTH + margin;
   stopRecButton = ctrl.addButton(STOP_REC_LABEL)
     .setSize(BUTTON_WIDTH, BUTTON_HEIGHT)
     .setPosition(buttonX, buttonY);
 
+  // match threshold slider
   buttonX += BUTTON_WIDTH + margin;
   matchThresholdSlider = ctrl.addSlider(SLIDER_LABEL)
     .setPosition(buttonX, buttonY)
@@ -237,6 +256,23 @@ void initGUI() {
   matchThresholdSlider.getCaptionLabel()
     .align(ControlP5.LEFT, ControlP5.TOP_OUTSIDE)
     .setPaddingX(0);
+
+  // simulate signal buttons
+  buttonX = margin;
+  buttonY = buttonY + BUTTON_HEIGHT + margin;
+  startSimButton = ctrl.addButton(START_SIM_LABEL)
+    .setSize(BUTTON_WIDTH, BUTTON_HEIGHT)
+    .setPosition(buttonX, buttonY);
+
+  buttonX += BUTTON_WIDTH + margin;
+  stopSimButton = ctrl.addButton(STOP_SIM_LABEL)
+    .setSize(BUTTON_WIDTH, BUTTON_HEIGHT)
+    .setPosition(buttonX, buttonY);
+
+  buttonX += BUTTON_WIDTH + margin;
+  resetSimButton = ctrl.addButton(RESET_SIM_LABEL)
+    .setSize(BUTTON_WIDTH, BUTTON_HEIGHT)
+    .setPosition(buttonX, buttonY);
 }
 
 void initGyroMonitors() {
@@ -416,6 +452,20 @@ void stopRecording() {
   //println(jsonString);
 }
 
+void startSimulation() {
+  isSimulatingSignal = true;
+  resetSimulation();
+}
+
+void stopSimulation() {
+  isSimulatingSignal = false;
+}
+
+void resetSimulation() {
+  sineStep = 0;
+  sineValue = 0;
+}
+
 
 // EVENT HANDLERS
 void controlEvent(ControlEvent event) {
@@ -429,5 +479,14 @@ void controlEvent(ControlEvent event) {
   }
   if (controlName == SLIDER_LABEL) {
     setMatchThreshold();
+  }
+  if (controlName == START_SIM_LABEL) {
+    startSimulation();
+  }
+  if (controlName == STOP_SIM_LABEL) {
+    stopSimulation();
+  }
+  if (controlName == RESET_SIM_LABEL) {
+    resetSimulation();
   }
 }
