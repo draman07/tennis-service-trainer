@@ -58,7 +58,12 @@ class SignalPlotter {
     if (values.length == 0) {
       return;
     }
-    
+
+    // draw background
+    fill(255, 255, 255, 5);
+    noStroke();
+    rect(x, y - h * 0.5, w, h);
+
     // draw monitor bottom frame
     stroke(MONITOR_FRAME);
     line(
