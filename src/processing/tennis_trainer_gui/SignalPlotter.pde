@@ -107,6 +107,10 @@ class SignalPlotter {
     return comparedValues;
   }
 
+  float getLatestValue() {
+    return values[historyLength - 1];
+  }
+
   float getMean() {
     float sum = 0;
     for (int i = 0; i < historyLength; i++) {
