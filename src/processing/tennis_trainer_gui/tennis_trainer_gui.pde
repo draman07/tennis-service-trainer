@@ -4,10 +4,6 @@ import controlP5.*;
 import processing.serial.*;
 
 
-// position vars
-PVector center;
-
-
 // control vars
 ControlP5 ctrl;
 
@@ -74,7 +70,6 @@ int DELAY_FOR_NEXT_MATCH = 500; // ms
 // PROCESSING SETUP
 void setup() {
   size(640, 720);
-  center = new PVector(width * 0.5, height * 0.5);
 
   initSerialPort();
   initGUI();
