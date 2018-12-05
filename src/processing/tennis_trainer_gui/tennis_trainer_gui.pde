@@ -73,14 +73,26 @@ int DELAY_FOR_NEXT_MATCH = 500; // ms
 
 // PROCESSING METHODS
 void setup() {
-  size(640, 720);
+  size(448, 640);
 
   initSerialPort();
   initOSC();
+
   initGUI();
-  initGyroMonitors();
-  initGyroRecorders();
-  initGyroComparators();
+
+  // monitors
+  int margin = 16;
+  int monitorWidth = 448 - (margin * 2);
+  int monitorHeight = 100;
+
+  int monitorY = 96;
+  initGyroMonitors(margin, monitorY, monitorWidth, monitorHeight);
+
+  monitorY += 144;
+  initGyroRecorders(margin, monitorY, monitorWidth, monitorHeight);
+
+  monitorY += 144;
+  initGyroComparators(margin, monitorY, monitorWidth, monitorHeight);
 }
 
 void draw() {
@@ -274,82 +286,67 @@ void initGUI() {
     .setPosition(buttonX, buttonY);
 }
 
-void initGyroMonitors() {
-  int monitorX = 16;
-  int monitorY = 160;
-  int monitorW = width - 32;
-  int monitorH = 100;
-  
+void initGyroMonitors(int x, int y, int w, int h) {
   gyroMonitors = new SignalPlotter[3]; // x, y, z
   gyroMonitors[0] = new SignalPlotter(
-    monitorX, monitorY,
-    monitorW, monitorH,
+    x, y,
+    w, h,
     HISTORY_LENGTH,
     color(204, 255, 0)
   );
   gyroMonitors[1] = new SignalPlotter(
-    monitorX, monitorY,
-    monitorW, monitorH,
+    x, y,
+    w, h,
     HISTORY_LENGTH,
     color(255, 204, 0)
   );
   gyroMonitors[2] = new SignalPlotter(
-    monitorX, monitorY,
-    monitorW, monitorH,
+    x, y,
+    w, h,
     HISTORY_LENGTH,
     color(204, 0, 255)
   );
 }
 
-void initGyroRecorders() {
-  int monitorX = 16;
-  int monitorY = 320;
-  int monitorW = width - 32;
-  int monitorH = 100;
-  
+void initGyroRecorders(int x, int y, int w, int h) {
   gyroRecorders = new SignalPlotter[3]; // x, y, z
   gyroRecorders[0] = new SignalPlotter(
-    monitorX, monitorY,
-    monitorW, monitorH,
+    x, y,
+    w, h,
     HISTORY_LENGTH,
     color(204, 255, 0)
   );
   gyroRecorders[1] = new SignalPlotter(
-    monitorX, monitorY,
-    monitorW, monitorH,
+    x, y,
+    w, h,
     HISTORY_LENGTH,
     color(255, 204, 0)
   );
   gyroRecorders[2] = new SignalPlotter(
-    monitorX, monitorY,
-    monitorW, monitorH,
+    x, y,
+    w, h,
     HISTORY_LENGTH,
     color(204, 0, 255)
   );
 }
 
-void initGyroComparators() {
-  int monitorX = 16;
-  int monitorY = 480;
-  int monitorW = width - 32;
-  int monitorH = 100;
-  
+void initGyroComparators(int x, int y, int w, int h) {
   gyroComparators = new SignalPlotter[3]; // x, y, z
   gyroComparators[0] = new SignalPlotter(
-    monitorX, monitorY,
-    monitorW, monitorH,
+    x, y,
+    w, h,
     HISTORY_LENGTH,
     color(204, 255, 0)
   );
   gyroComparators[1] = new SignalPlotter(
-    monitorX, monitorY,
-    monitorW, monitorH,
+    x, y,
+    w, h,
     HISTORY_LENGTH,
     color(255, 204, 0)
   );
   gyroComparators[2] = new SignalPlotter(
-    monitorX, monitorY,
-    monitorW, monitorH,
+    x, y,
+    w, h,
     HISTORY_LENGTH,
     color(204, 0, 255)
   );
