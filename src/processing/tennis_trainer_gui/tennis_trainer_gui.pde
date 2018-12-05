@@ -1,5 +1,3 @@
-import java.util.Date;
-
 import controlP5.*;
 import processing.serial.*;
 
@@ -38,11 +36,6 @@ int BAUD_RATE = 9600;
 int GYRO_DATA_LENGTH = 6;
 
 Serial port;
-
-
-// output json
-String jsonString;
-JSONObject json;
 
 
 // signal monitors
@@ -152,22 +145,6 @@ void draw() {
 
 
 // METHODS DEFINITIONS
-void addToJSON(GyroData g) {
-  // create date for timestamp
-  Date now = new Date();
-  
-  // add to string
-  jsonString += "{"
-    + "gx:" + g.gyroX
-    + "gy:" + g.gyroY
-    + "gz:" + g.gyroZ
-    + "ax:" + g.accelX
-    + "ay:" + g.accelY
-    + "az:" + g.accelZ
-    + "'timestamp':" + now.getTime()
-  + "},";
-}
-
 Boolean areSignalsMatching() {
   Boolean isMatch = false;
 
@@ -437,9 +414,6 @@ void startRecording() {
 
   // set flag
   isRecording = true;
-  
-  // start json string
-  jsonString = "{'data':[";
 }
 
 void stopRecording() {
@@ -448,11 +422,6 @@ void stopRecording() {
   // set flags
   isRecording = false;
   hasRecording = true;
-  
-  // save json to file
-  // TODO
-  jsonString += "]}";
-  //println(jsonString);
 }
 
 void startSimulation() {
