@@ -144,7 +144,7 @@ float getErrorSum(float[] a) {
   for (int i = 0; i < a.length; i++) {
     sum += abs(a[i]);
   };
-  return sum / a.length;
+  return sum / a.length;
 }
 
 float getMean(float[] array) {
