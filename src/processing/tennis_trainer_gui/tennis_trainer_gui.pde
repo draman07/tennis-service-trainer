@@ -16,8 +16,11 @@ int BUTTON_HEIGHT = 32;
 
 String START_REC_LABEL = "Start Recording";
 String STOP_REC_LABEL = "Stop Recording";
+String SLIDER_LABEL = "Match Threshold";
+
 Button startRecButton;
 Button stopRecButton;
+Slider matchThresholdSlider;
 
 Boolean isRecording = false;
 Boolean hasRecording = false;
@@ -49,7 +52,7 @@ float GYRO_SCALE = 1000.;
 boolean isSumSet = false;
 float errorsSum = -1.;
 float lowestErrorsSum = -1.;
-float THRESHOLD_COEFFICIENT = 1.75;
+float matchThreshold = 1.75;
 
 // match timer
 boolean isMatchingAvailable = false;
@@ -166,7 +169,7 @@ boolean areSignalsMatching() {
   // println("errors sum: " + errorsSum);
   // println("lowest errors sum: " + lowestErrorsSum);
 
-  if (errorsSum <= lowestErrorsSum * THRESHOLD_COEFFICIENT) {
+  if (errorsSum <= lowestErrorsSum * matchThreshold) {
     isMatch = true;
   }
 
@@ -220,6 +223,20 @@ void initGUI() {
   stopRecButton = ctrl.addButton(STOP_REC_LABEL)
     .setSize(BUTTON_WIDTH, BUTTON_HEIGHT)
     .setPosition(buttonX, buttonY);
+
+  buttonX += BUTTON_WIDTH + margin;
+  matchThresholdSlider = ctrl.addSlider(SLIDER_LABEL)
+    .setPosition(buttonX, buttonY)
+    .setSize(BUTTON_WIDTH, BUTTON_HEIGHT)
+    .setRange(0.00, 2.50)
+    .setValue(matchThreshold)
+    .setSliderMode(Slider.FLEXIBLE);
+  matchThresholdSlider.getValueLabel()
+    .align(ControlP5.RIGHT, ControlP5.TOP_OUTSIDE)
+    .setPaddingX(0);
+  matchThresholdSlider.getCaptionLabel()
+    .align(ControlP5.LEFT, ControlP5.TOP_OUTSIDE)
+    .setPaddingX(0);
 }
 
 void initGyroMonitors() {
@@ -359,6 +376,10 @@ GyroData pullDataFromPort() {
   return g;
 }
 
+void setMatchThreshold() {
+  matchThreshold = matchThresholdSlider.getValue();
+}
+
 void startMatchDelay() {
   isMatchingAvailable = false;
 
@@ -397,12 +418,14 @@ void stopRecording() {
 // EVENT HANDLERS
 void controlEvent(ControlEvent event) {
   String controlName = event.getController().getName();
-  
-  // weki
+
   if (controlName == START_REC_LABEL) {
     startRecording();
   }
   if (controlName == STOP_REC_LABEL) {
     stopRecording();
+  }
+  if (controlName == SLIDER_LABEL) {
+    setMatchThreshold();
   }
 }
