@@ -62,7 +62,7 @@ int DELAY_FOR_NEXT_MATCH = 500; // ms
 void setup() {
   size(640, 720);
   center = new PVector(width * 0.5, height * 0.5);
-  
+
   initSerialPort();
   initGUI();
   initGyroMonitors();
@@ -73,17 +73,19 @@ void setup() {
 void draw() {
   // draw bg
   background(20);
-  
+
   // pull data from port
-  while (port.available() > 0) {
-    GyroData g = pullDataFromPort();
-    
-    if (g != null && g.isInit) {
-      //addToJSON(g);
+  if (port != null) {
+    while (port.available() > 0) {
+      GyroData g = pullDataFromPort();
       
-      gyroMonitors[0].update(g.gyroX / GYRO_SCALE);
-      gyroMonitors[1].update(g.gyroY / GYRO_SCALE);
-      gyroMonitors[2].update(g.gyroZ / GYRO_SCALE);
+      if (g != null && g.isInit) {
+        //addToJSON(g);
+        
+        gyroMonitors[0].update(g.gyroX / GYRO_SCALE);
+        gyroMonitors[1].update(g.gyroY / GYRO_SCALE);
+        gyroMonitors[2].update(g.gyroZ / GYRO_SCALE);
+      }
     }
   }
 
@@ -306,6 +308,11 @@ void initSerialPort() {
   
   // list all available serial ports
   printArray(Serial.list());
+
+  // error checking
+  if (PORT_INDEX > Serial.list().length) {
+    return;
+  }
 
   // open port
   String portName = Serial.list()[PORT_INDEX];
