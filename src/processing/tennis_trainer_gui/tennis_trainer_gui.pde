@@ -87,44 +87,41 @@ void draw() {
   // draw bg
   background(20);
 
+  GyroData g = new GyroData();
+
   // simulate signal
   if (isSimulatingSignal) {
     sineStep += 0.1;
     sineValue = sin(sineStep);
-    gyroMonitors[0].update(sineValue);
-    gyroMonitors[1].update(sineValue);
-    gyroMonitors[2].update(sineValue);
+
+    g.gyroX = sineValue;
+    g.gyroY = sineValue;
+    g.gyroZ = sineValue;
+    g.init();
 
   } else {
     // pull data from port
     // only if not during simulation
     if (port != null) {
       while (port.available() > 0) {
-        GyroData g = pullDataFromPort();
-        
-        if (g != null && g.isInit) {
-          //addToJSON(g);
-          
-          gyroMonitors[0].update(g.gyroX / GYRO_SCALE);
-          gyroMonitors[1].update(g.gyroY / GYRO_SCALE);
-          gyroMonitors[2].update(g.gyroZ / GYRO_SCALE);
-        }
+        g = pullDataFromPort();
+        g.gyroX /= GYRO_SCALE;
+        g.gyroY /= GYRO_SCALE;
+        g.gyroZ /= GYRO_SCALE;
       }
     }
   }
 
-  if (isSimulatingSignal) {
-    sineStep += 0.1;
-    sineValue = sin(sineStep);
-    gyroMonitors[0].update(sineValue);
-    gyroMonitors[1].update(sineValue);
-    gyroMonitors[2].update(sineValue);
+  if (g != null && g.isInit) {
+    gyroMonitors[0].update(g.gyroX);
+    gyroMonitors[1].update(g.gyroY);
+    gyroMonitors[2].update(g.gyroZ);
   }
 
   if (isRecording) {
-    gyroRecorders[0].setValues(gyroMonitors[0].values);
-    gyroRecorders[1].setValues(gyroMonitors[1].values);
-    gyroRecorders[2].setValues(gyroMonitors[2].values);
+    gyroRecorders[0].update(gyroMonitors[0].getLatestValue());
+    gyroRecorders[1].update(gyroMonitors[1].getLatestValue());
+    gyroRecorders[2].update(gyroMonitors[2].getLatestValue());
   }
   
   if (hasRecording) {
