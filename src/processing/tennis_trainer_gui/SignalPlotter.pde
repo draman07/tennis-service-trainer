@@ -74,13 +74,14 @@ class SignalPlotter {
 
     // draw signal
     stroke(signalColor);
+    float scaledAmplitude = float(h) * 0.5;
     for(int i = 1; i < historyLength; i++) {
       int prevIndex = i - 1;
       line(
         x + stepSize * i,
-        y - values[prevIndex] * h,
+        y - values[prevIndex] * scaledAmplitude,
         x + stepSize * (i + 1),
-        y - values[i] * h
+        y - values[i] * scaledAmplitude
       );
     }
   }
