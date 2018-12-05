@@ -87,17 +87,28 @@ void draw() {
   // draw bg
   background(20);
 
-  // pull data from port
-  if (port != null) {
-    while (port.available() > 0) {
-      GyroData g = pullDataFromPort();
-      
-      if (g != null && g.isInit) {
-        //addToJSON(g);
+  // simulate signal
+  if (isSimulatingSignal) {
+    sineStep += 0.1;
+    sineValue = sin(sineStep);
+    gyroMonitors[0].update(sineValue);
+    gyroMonitors[1].update(sineValue);
+    gyroMonitors[2].update(sineValue);
+
+  } else {
+    // pull data from port
+    // only if not during simulation
+    if (port != null) {
+      while (port.available() > 0) {
+        GyroData g = pullDataFromPort();
         
-        gyroMonitors[0].update(g.gyroX / GYRO_SCALE);
-        gyroMonitors[1].update(g.gyroY / GYRO_SCALE);
-        gyroMonitors[2].update(g.gyroZ / GYRO_SCALE);
+        if (g != null && g.isInit) {
+          //addToJSON(g);
+          
+          gyroMonitors[0].update(g.gyroX / GYRO_SCALE);
+          gyroMonitors[1].update(g.gyroY / GYRO_SCALE);
+          gyroMonitors[2].update(g.gyroZ / GYRO_SCALE);
+        }
       }
     }
   }
