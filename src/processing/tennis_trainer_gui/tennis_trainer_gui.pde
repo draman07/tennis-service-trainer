@@ -1,5 +1,24 @@
 import controlP5.*;
+import netP5.*;
+import oscP5.*;
 import processing.serial.*;
+
+
+// port vars
+int PORT_INDEX = 3; // TODO: set to appropriate value
+int BAUD_RATE = 9600;
+int GYRO_DATA_LENGTH = 6;
+
+Serial port;
+
+
+// osc vars
+String OSC_ADDRESS = "/tennis";
+String RECIPIENT_IP = "127.0.0.1";
+int RECIPIENT_PORT = 9600;
+int LISTENING_PORT = 12800;
+OscP5 osc;
+NetAddress recipient;
 
 
 // control vars
@@ -30,14 +49,6 @@ Boolean isRecording = false;
 Boolean hasRecording = false;
 
 
-// port vars
-int PORT_INDEX = 3; // TODO: set to appropriate value
-int BAUD_RATE = 9600;
-int GYRO_DATA_LENGTH = 6;
-
-Serial port;
-
-
 // signal monitors
 SignalPlotter[] gyroMonitors;
 SignalPlotter[] gyroRecorders;
@@ -50,7 +61,7 @@ float GYRO_SCALE = 1000.;
 // match variables
 Boolean isSumSet = false;
 float errorsSum = -1.;
-float lowestErrorsSum = -1.;
+float lowestErrorsSum = MAX_FLOAT;
 float matchThreshold = 1.75;
 
 // match timer
@@ -60,11 +71,12 @@ int delayEnd = -1;
 int DELAY_FOR_NEXT_MATCH = 500; // ms
 
 
-// PROCESSING SETUP
+// PROCESSING METHODS
 void setup() {
   size(640, 720);
 
   initSerialPort();
+  initOSC();
   initGUI();
   initGyroMonitors();
   initGyroRecorders();
@@ -111,16 +123,23 @@ void draw() {
     gyroRecorders[1].update(gyroMonitors[1].getLatestValue());
     gyroRecorders[2].update(gyroMonitors[2].getLatestValue());
   }
-  
+
   if (hasRecording) {
     gyroComparators[0].setValues(gyroRecorders[0].getComparedValues(gyroMonitors[0].values));
     gyroComparators[1].setValues(gyroRecorders[1].getComparedValues(gyroMonitors[1].values));
     gyroComparators[2].setValues(gyroRecorders[2].getComparedValues(gyroMonitors[2].values));
 
+    sendOSC();
+
     if (isMatchingAvailable) {
       if (areSignalsMatching()) {
         startMatchDelay();
-        println("MATCH!");
+        println(
+          "Signal matched at "
+          + hour() + ":"
+          + minute() + ":"
+          + second()
+        );
       }
     }
 
@@ -336,6 +355,11 @@ void initGyroComparators() {
   );
 }
 
+void initOSC() {
+  osc = new OscP5(this, LISTENING_PORT);
+  recipient = new NetAddress(RECIPIENT_IP, RECIPIENT_PORT);
+}
+
 void initSerialPort() {
   // see https://www.processing.org/reference/libraries/serial/Serial_read_.html
   
@@ -436,6 +460,16 @@ void stopSimulation() {
 void resetSimulation() {
   sineStep = 0;
   sineValue = 0;
+}
+
+void sendOSC() {
+  // create message
+  OscMessage message = new OscMessage(OSC_ADDRESS);
+  message.add(errorsSum);
+  message.add(lowestErrorsSum);
+  message.add(matchThreshold);
+
+  osc.send(message, recipient);
 }
 
 
