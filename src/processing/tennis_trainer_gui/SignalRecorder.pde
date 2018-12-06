@@ -24,6 +24,8 @@ class SignalRecorder {
   float lowestErrorsSum = MAX_FLOAT;
   float matchThreshold = 1.75;
 
+  Boolean hasRecording = false;
+
 
   // CONSCTRUCTOR
   SignalRecorder(
@@ -89,6 +91,7 @@ class SignalRecorder {
     recorders[0].update(_x);
     recorders[1].update(_y);
     recorders[2].update(_z);
+    hasRecording = true;
   }
 
 
