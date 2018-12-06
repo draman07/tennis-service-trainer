@@ -50,30 +50,28 @@ Boolean hasRecording = false;
 
 
 // signal monitors
-SignalPlotter[] gyroMonitors;
-SignalPlotter[] gyroRecorders;
-SignalPlotter[] gyroComparators;
-
-// SignalPlotter[] accelMonitors;
 int HISTORY_LENGTH = 160;
 float GYRO_SCALE = 1000.;
 
-// match variables
-Boolean isSumSet = false;
-float errorsSum = -1.;
-float lowestErrorsSum = MAX_FLOAT;
-float matchThreshold = 1.75;
+SignalPlotter[] gyroMonitors;
+int[] MONITOR_X_POSITIONS = {20, 440, 860};
 
-// match timer
-Boolean isMatchingAvailable = false;
-int delayStart = -1;
-int delayEnd = -1;
-int DELAY_FOR_NEXT_MATCH = 500; // ms
+SignalRecorder gesture1Recorder;
+SignalRecorder gesture2Recorder;
+SignalRecorder gesture3Recorder;
+SignalRecorder[] recorders = new SignalRecorder[3];
+
+int targetRecorderIndex = 0;
+
+
+// match variables
+float matchThreshold = 1.75;
 
 
 // PROCESSING METHODS
 void setup() {
-  size(448, 640);
+  size(1280, 640, P2D);
+  frameRate(60);
 
   initSerialPort();
   initOSC();
@@ -81,18 +79,54 @@ void setup() {
   initGUI();
 
   // monitors
-  int margin = 16;
-  int monitorWidth = 448 - (margin * 2);
+  int margin = 20;
+  int monitorWidth = 400;
   int monitorHeight = 100;
+  int monitorX = 0;
+  int monitorY = 0;
 
-  int monitorY = 96;
-  initGyroMonitors(margin, monitorY, monitorWidth, monitorHeight);
+  // gyro monitor
+  monitorX = MONITOR_X_POSITIONS[0];
+  monitorY = 96;
+  initGyroMonitors(
+    monitorX, monitorY,
+    monitorWidth, monitorHeight
+  );
 
-  monitorY += 144;
-  initGyroRecorders(margin, monitorY, monitorWidth, monitorHeight);
+  // rec 1 monitor
+  monitorX = MONITOR_X_POSITIONS[0];
+  monitorY = 240;
+  gesture1Recorder = new SignalRecorder(
+    monitorX, monitorY,
+    monitorWidth, monitorHeight,
+    HISTORY_LENGTH
+  );
 
-  monitorY += 144;
-  initGyroComparators(margin, monitorY, monitorWidth, monitorHeight);
+  // rec 2 monitor
+  monitorX = MONITOR_X_POSITIONS[1];
+  monitorY = 240;
+  gesture2Recorder = new SignalRecorder(
+    monitorX, monitorY,
+    monitorWidth, monitorHeight,
+    HISTORY_LENGTH
+  );
+
+  // rec 3 monitor
+  monitorX = MONITOR_X_POSITIONS[2];
+  monitorY = 240;
+  gesture3Recorder = new SignalRecorder(
+    monitorX, monitorY,
+    monitorWidth, monitorHeight,
+    HISTORY_LENGTH
+  );
+
+  gesture1Recorder.init();
+  gesture2Recorder.init();
+  gesture3Recorder.init();
+
+  recorders[0] = gesture1Recorder;
+  recorders[1] = gesture2Recorder;
+  recorders[2] = gesture3Recorder;
 }
 
 void draw() {
@@ -131,101 +165,50 @@ void draw() {
   }
 
   if (isRecording) {
-    gyroRecorders[0].update(gyroMonitors[0].getLatestValue());
-    gyroRecorders[1].update(gyroMonitors[1].getLatestValue());
-    gyroRecorders[2].update(gyroMonitors[2].getLatestValue());
+    recorders[targetRecorderIndex].record(
+      gyroMonitors[0].getLatestValue(),
+      gyroMonitors[1].getLatestValue(),
+      gyroMonitors[2].getLatestValue()
+    );
   }
 
-  if (hasRecording) {
-    gyroComparators[0].setValues(gyroRecorders[0].getComparedValues(gyroMonitors[0].values));
-    gyroComparators[1].setValues(gyroRecorders[1].getComparedValues(gyroMonitors[1].values));
-    gyroComparators[2].setValues(gyroRecorders[2].getComparedValues(gyroMonitors[2].values));
-
-    sendOSC();
-
-    if (isMatchingAvailable) {
-      if (areSignalsMatching()) {
-        startMatchDelay();
-        println(
-          "Signal matched at "
-          + hour() + ":"
-          + minute() + ":"
-          + second()
-        );
-      }
-    }
-
-    checkMatchAvailability();
+  if (gesture1Recorder.hasRecording) {
+    gesture1Recorder.compareToRecording(
+      gyroMonitors[0].values,
+      gyroMonitors[1].values,
+      gyroMonitors[2].values
+    );
+  }
+  if (gesture2Recorder.hasRecording) {
+    gesture2Recorder.compareToRecording(
+      gyroMonitors[0].values,
+      gyroMonitors[1].values,
+      gyroMonitors[2].values
+    );
+  }
+  if (gesture3Recorder.hasRecording) {
+    gesture3Recorder.compareToRecording(
+      gyroMonitors[0].values,
+      gyroMonitors[1].values,
+      gyroMonitors[2].values
+    );
   }
 
   // draw monitors
   gyroMonitors[0].draw();
   gyroMonitors[1].draw();
   gyroMonitors[2].draw();
-  
+
   // draw recorders
-  gyroRecorders[0].draw();
-  gyroRecorders[1].draw();
-  gyroRecorders[2].draw();
-  
-  // draw comparators
-  gyroComparators[0].draw();
-  gyroComparators[1].draw();
-  gyroComparators[2].draw();
+  gesture1Recorder.draw();
+  gesture2Recorder.draw();
+  gesture3Recorder.draw();
+
+  sendOSC();
 }
 
 
 // METHODS DEFINITIONS
-Boolean areSignalsMatching() {
-  Boolean isMatch = false;
-
-  // calculate errors sum
-  float gxError = getErrorSum(gyroComparators[0].values);
-  float gyError = getErrorSum(gyroComparators[0].values);
-  float gzError = getErrorSum(gyroComparators[0].values);
-  errorsSum = gxError + gyError + gzError;
-
-  // perfect match is impossible,
-  // wait for a sum to be more than 0 before setting anything
-  if (errorsSum > 0.) {
-    if (isSumSet) {
-      lowestErrorsSum = min(lowestErrorsSum, errorsSum);
-    } else {
-      lowestErrorsSum = errorsSum;
-    }
-  }
-
-  // println("errors sum: " + errorsSum);
-  // println("lowest errors sum: " + lowestErrorsSum);
-
-  if (errorsSum <= lowestErrorsSum * matchThreshold) {
-    isMatch = true;
-  }
-
-  // set flag after first past
-  isSumSet = true;
-
-  return isMatch;
-}
-
-void checkMatchAvailability() {
-  if (!isMatchingAvailable) {
-    if (millis() > delayEnd) {
-      isMatchingAvailable = true;
-      delayStart = -1;
-      delayEnd = -1;
-    }
-  }
-}
-
-float getErrorSum(float[] a) {
-  float sum = 0;
-  for (int i = 0; i < a.length; i++) {
-    sum += abs(a[i]);
-  };
-  return sum / a.length;
-}
-
 float getMean(float[] array) {
   float sum = 0;
   for (int i = 0; i < array.length; i++) {
@@ -308,50 +291,6 @@ void initGyroMonitors(int x, int y, int w, int h) {
   );
 }
 
-void initGyroRecorders(int x, int y, int w, int h) {
-  gyroRecorders = new SignalPlotter[3]; // x, y, z
-  gyroRecorders[0] = new SignalPlotter(
-    x, y,
-    w, h,
-    HISTORY_LENGTH,
-    color(204, 255, 0)
-  );
-  gyroRecorders[1] = new SignalPlotter(
-    x, y,
-    w, h,
-    HISTORY_LENGTH,
-    color(255, 204, 0)
-  );
-  gyroRecorders[2] = new SignalPlotter(
-    x, y,
-    w, h,
-    HISTORY_LENGTH,
-    color(204, 0, 255)
-  );
-}
-
-void initGyroComparators(int x, int y, int w, int h) {
-  gyroComparators = new SignalPlotter[3]; // x, y, z
-  gyroComparators[0] = new SignalPlotter(
-    x, y,
-    w, h,
-    HISTORY_LENGTH,
-    color(204, 255, 0)
-  );
-  gyroComparators[1] = new SignalPlotter(
-    x, y,
-    w, h,
-    HISTORY_LENGTH,
-    color(255, 204, 0)
-  );
-  gyroComparators[2] = new SignalPlotter(
-    x, y,
-    w, h,
-    HISTORY_LENGTH,
-    color(204, 0, 255)
-  );
-}
-
 void initOSC() {
   osc = new OscP5(this, LISTENING_PORT);
   recipient = new NetAddress(RECIPIENT_IP, RECIPIENT_PORT);
@@ -413,36 +352,49 @@ GyroData pullDataFromPort() {
   return g;
 }
 
+void resetSimulation() {
+  sineStep = 0;
+  sineValue = 0;
+}
+
+void sendOSC() {
+  OscMessage message = new OscMessage(OSC_ADDRESS);
+
+  message.add(gesture1Recorder.errorsSum);
+  message.add(gesture1Recorder.lowestErrorsSum);
+
+  message.add(gesture2Recorder.errorsSum);
+  message.add(gesture2Recorder.lowestErrorsSum);
+
+  message.add(gesture3Recorder.errorsSum);
+  message.add(gesture3Recorder.lowestErrorsSum);
+
+  message.add(matchThreshold);
+
+  osc.send(message, recipient);
+}
+
+void setGyroMonitorsX(int _x) {
+  gyroMonitors[0].x = _x;
+  gyroMonitors[1].x = _x;
+  gyroMonitors[2].x = _x;
+}
+
 void setMatchThreshold() {
   if (matchThresholdSlider != null) {
     matchThreshold = matchThresholdSlider.getValue();
   }
 }
 
-void startMatchDelay() {
-  isMatchingAvailable = false;
-
-  delayStart = millis();
-  delayEnd = delayStart + DELAY_FOR_NEXT_MATCH;
-}
-
 void startRecording() {
   if (isRecording) {
     return;
   }
-  
+
   println("start recording");
 
   // set flag
   isRecording = true;
-}
-
-void stopRecording() {
-  println("stop recording");
-  
-  // set flags
-  isRecording = false;
-  hasRecording = true;
 }
 
 void startSimulation() {
@@ -450,23 +402,13 @@ void startSimulation() {
   resetSimulation();
 }
 
+void stopRecording() {
+  println("stop recording");
+  isRecording = false;
+}
+
 void stopSimulation() {
   isSimulatingSignal = false;
-}
-
-void resetSimulation() {
-  sineStep = 0;
-  sineValue = 0;
-}
-
-void sendOSC() {
-  // create message
-  OscMessage message = new OscMessage(OSC_ADDRESS);
-  message.add(errorsSum);
-  message.add(lowestErrorsSum);
-  message.add(matchThreshold);
-
-  osc.send(message, recipient);
 }
 
 
@@ -492,4 +434,24 @@ void controlEvent(ControlEvent event) {
   if (controlName == RESET_SIM_LABEL) {
     resetSimulation();
   }
+}
+
+void keyPressed(KeyEvent event) {
+  switch (keyCode) {
+    // 1
+    case 49:
+      targetRecorderIndex = 0;
+      break;
+
+    // 2
+    case 50:
+      targetRecorderIndex = 1;
+      break;
+
+    // 3
+    case 51:
+      targetRecorderIndex = 2;
+      break;
+  }
+  setGyroMonitorsX(MONITOR_X_POSITIONS[targetRecorderIndex]);
 }
