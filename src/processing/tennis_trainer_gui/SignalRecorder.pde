@@ -19,6 +19,13 @@ class SignalRecorder {
 
   Boolean isInit = false;
 
+  // signal difference variables
+  float errorsSum = MIN_FLOAT;
+  float lowestErrorsSum = MAX_FLOAT;
+  float matchThreshold = 1.75;
+
+  Boolean hasRecording = false;
+
 
   // CONSCTRUCTOR
   SignalRecorder(
@@ -44,6 +51,24 @@ class SignalRecorder {
     isInit = true;
   }
 
+  Boolean areSignalsMatching() {
+    Boolean isMatch = false;
+
+    if (errorsSum <= lowestErrorsSum * matchThreshold) {
+      isMatch = true;
+    }
+
+    return isMatch;
+  }
+
+  void compareToRecording(float[] _xValues, float[] _yValues, float[] _zValues) {
+    comparators[0].setValues(recorders[0].getComparedValues(_xValues));
+    comparators[1].setValues(recorders[1].getComparedValues(_yValues));
+    comparators[2].setValues(recorders[2].getComparedValues(_zValues));
+
+    setErrorsSum();
+  }
+
   void draw() {
     if (!isInit) {
       return;
@@ -60,6 +85,13 @@ class SignalRecorder {
       comparators[1].draw();
       comparators[2].draw();
     }
+  }
+
+  void record(float _x, float _y, float _z) {
+    recorders[0].update(_x);
+    recorders[1].update(_y);
+    recorders[2].update(_z);
+    hasRecording = true;
   }
 
 
@@ -86,5 +118,27 @@ class SignalRecorder {
     );
 
     return _monitors;
+  }
+
+  float getErrorSum(float[] a) {
+    float sum = 0;
+    for (int i = 0; i < a.length; i++) {
+      sum += abs(a[i]);
+    };
+    return sum / a.length;
+  }
+
+  void setErrorsSum() {
+    float gxError = getErrorSum(comparators[0].values);
+    float gyError = getErrorSum(comparators[1].values);
+    float gzError = getErrorSum(comparators[2].values);
+    errorsSum = gxError + gyError + gzError;
+
+    // perfect match is impossible,
+    // wait for a sum to be more than 0 before setting anything
+    if (errorsSum > 0.) {
+      lowestErrorsSum = min(lowestErrorsSum, errorsSum);
+      // TODO: refresh value at every so often
+    }
   }
 }
