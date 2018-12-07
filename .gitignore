@@ -5,3 +5,4 @@
 *.DS_STORE
 
 ### PROJECT-SPECIFIC FILES ###
+/bin
