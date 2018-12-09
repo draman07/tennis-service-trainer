@@ -151,18 +151,19 @@ void draw() {
     if (port != null) {
       while (port.available() > 0) {
         g = pullDataFromPort();
-        g.gyroX /= GYRO_SCALE;
-        g.gyroY /= GYRO_SCALE;
-        g.gyroZ /= GYRO_SCALE;
+        if (g != null && g.isInit) {
+          g.gyroX /= GYRO_SCALE;
+          g.gyroY /= GYRO_SCALE;
+          g.gyroZ /= GYRO_SCALE;
+        }
       }
     }
   }
 
-  if (g != null && g.isInit) {
-    gyroMonitors[0].update(g.gyroX);
-    gyroMonitors[1].update(g.gyroY);
-    gyroMonitors[2].update(g.gyroZ);
-  }
+  // assign gyro values to monitors
+  gyroMonitors[0].update(g.gyroX);
+  gyroMonitors[1].update(g.gyroY);
+  gyroMonitors[2].update(g.gyroZ);
 
   if (isRecording) {
     recorders[targetRecorderIndex].record(
