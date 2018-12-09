@@ -161,16 +161,19 @@ void draw() {
   }
 
   // assign gyro values to monitors
-  gyroMonitors[0].update(g.gyroX);
-  gyroMonitors[1].update(g.gyroY);
-  gyroMonitors[2].update(g.gyroZ);
+  if (g.gyroX != 0. && g.gyroY != 0. && g.gyroZ != 0.) {
+    // set values
+    gyroMonitors[0].update(g.gyroX);
+    gyroMonitors[1].update(g.gyroY);
+    gyroMonitors[2].update(g.gyroZ);
 
-  if (isRecording) {
-    recorders[targetRecorderIndex].record(
-      gyroMonitors[0].getLatestValue(),
-      gyroMonitors[1].getLatestValue(),
-      gyroMonitors[2].getLatestValue()
-    );
+    if (isRecording) {
+      recorders[targetRecorderIndex].record(
+        g.gyroX,
+        g.gyroY,
+        g.gyroZ
+      );
+    }
   }
 
   if (gesture1Recorder.hasRecording) {
