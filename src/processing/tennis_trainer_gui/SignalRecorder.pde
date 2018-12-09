@@ -20,9 +20,13 @@ class SignalRecorder {
   Boolean isInit = false;
 
   // signal difference variables
-  float errorsSum = MIN_FLOAT;
-  float lowestErrorsSum = MAX_FLOAT;
+  float errorsSum = MAX_FLOAT;
+  float lowestErrorsSum = 1.;
   float matchThreshold = 1.75;
+
+  // lowest errors sum timer
+  int timerEnd = -1;
+  int REFRESH_RATE = 500;
 
   Boolean hasRecording = false;
 
@@ -47,6 +51,8 @@ class SignalRecorder {
   void init() {
     recorders = initMonitors(recorders, x, y);
     comparators = initMonitors(comparators, x, y + MARGIN_BOTTOM);
+
+    startRefreshCycle();
 
     isInit = true;
   }
@@ -85,6 +91,8 @@ class SignalRecorder {
       comparators[1].draw();
       comparators[2].draw();
     }
+
+    refreshLowestErrorsSum();
   }
 
   void record(float _x, float _y, float _z) {
@@ -135,10 +143,25 @@ class SignalRecorder {
     errorsSum = gxError + gyError + gzError;
 
     // perfect match is impossible,
-    // wait for a sum to be more than 0 before setting anything
+    // wait for a sum to be more than 0
+    // before setting anything
     if (errorsSum > 0.) {
       lowestErrorsSum = min(lowestErrorsSum, errorsSum);
-      // TODO: refresh value at every so often
+      println("lowestErrorsSum: " + lowestErrorsSum);
     }
+  }
+
+  void refreshLowestErrorsSum() {
+    if (millis() > timerEnd) {
+      // reset value so that next min() comparison
+      // takes the updated lowest sum
+      lowestErrorsSum = lowestErrorsSum * 1.25;
+
+      startRefreshCycle();
+    }
+  }
+
+  void startRefreshCycle() {
+    timerEnd = millis() + REFRESH_RATE;
   }
 }
