@@ -456,6 +456,15 @@ void keyPressed(KeyEvent event) {
     case 51:
       targetRecorderIndex = 2;
       break;
+
+    // spacebar
+    case 32:
+      if (!isRecording) {
+        startRecording();
+      } else {
+        stopRecording();
+      }
+      break;	
   }
   setGyroMonitorsX(MONITOR_X_POSITIONS[targetRecorderIndex]);
 }
