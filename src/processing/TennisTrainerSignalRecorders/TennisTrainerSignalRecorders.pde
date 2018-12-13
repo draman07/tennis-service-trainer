@@ -50,7 +50,7 @@ SignalRecorder gesture2Recorder;
 SignalRecorder gesture3Recorder;
 SignalRecorder[] recorders = new SignalRecorder[3];
 
-int targetRecorderIndex = 0;
+int targetRecorderIndex = 1;
 
 
 // osc vars
@@ -96,6 +96,7 @@ void setup() {
     monitorX, monitorY,
     monitorWidth, monitorHeight
   );
+  setGyroMonitorsX(MONITOR_X_POSITIONS[targetRecorderIndex]);
 
   // rec 1 monitor
   monitorX = MONITOR_X_POSITIONS[0];
