@@ -10,6 +10,7 @@ class SignalRecorder {
   // VARS
   SignalPlotter[] recorders;
   SignalPlotter[] comparators;
+  float[] arrayOfZeroes;
 
   int x = 0;
   int y = 0;
@@ -24,6 +25,7 @@ class SignalRecorder {
   float lowestErrorsSum = MAX_FLOAT;
   float matchThreshold = 1.75;
 
+  Boolean isRecording = false;
   Boolean hasRecording = false;
 
 
@@ -48,6 +50,11 @@ class SignalRecorder {
     recorders = initMonitors(recorders, x, y);
     comparators = initMonitors(comparators, x, y + MARGIN_BOTTOM);
 
+    arrayOfZeroes = new float[HISTORY_LENGTH];
+    for (int i = 0; i < HISTORY_LENGTH; i++) {
+      arrayOfZeroes[i] = 0.;
+    }
+
     isInit = true;
   }
 
@@ -61,7 +68,29 @@ class SignalRecorder {
     return isMatch;
   }
 
+  void clear() {
+    clearRecorders();
+    clearComparators();
+  }
+
+  void clearComparators() {
+    comparators[0].setValues(arrayOfZeroes);
+    comparators[1].setValues(arrayOfZeroes);
+    comparators[2].setValues(arrayOfZeroes);
+  }
+
+  void clearRecorders() {
+    recorders[0].setValues(arrayOfZeroes);
+    recorders[1].setValues(arrayOfZeroes);
+    recorders[2].setValues(arrayOfZeroes);
+    hasRecording = false;
+  }
+
   void compareToRecording(float[] _xValues, float[] _yValues, float[] _zValues) {
+    if (isRecording) {
+      return;
+    }
+
     comparators[0].setValues(recorders[0].getComparedValues(_xValues));
     comparators[1].setValues(recorders[1].getComparedValues(_yValues));
     comparators[2].setValues(recorders[2].getComparedValues(_zValues));
