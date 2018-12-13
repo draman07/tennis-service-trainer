@@ -50,7 +50,7 @@ Boolean hasRecording = false;
 
 
 // signal monitors
-int HISTORY_LENGTH = 160;
+int HISTORY_LENGTH = 200;
 float GYRO_SCALE = 1000.;
 
 SignalPlotter[] gyroMonitors;
