@@ -32,6 +32,9 @@ Boolean isSimulatingSignal = false;
 float sineStep = 0;
 float sineValue = 0;
 
+String CLEAR_LABEL = "Clear";
+Button clearButton;
+
 Boolean isRecording = false;
 Boolean hasRecording = false;
 
@@ -224,19 +227,22 @@ void initGUI() {
   int buttonX = margin;
   int buttonY = 0;
   ctrl = new ControlP5(this);
-  
+
+
   // start recording button
   buttonX = margin;
   buttonY = height - 2 * (BUTTON_HEIGHT + margin);
   startRecButton = ctrl.addButton(START_REC_LABEL)
     .setSize(BUTTON_WIDTH, BUTTON_HEIGHT)
     .setPosition(buttonX, buttonY);
-  
+
+
   // stop recording button
   buttonX += BUTTON_WIDTH + margin;
   stopRecButton = ctrl.addButton(STOP_REC_LABEL)
     .setSize(BUTTON_WIDTH, BUTTON_HEIGHT)
     .setPosition(buttonX, buttonY);
+
 
   // match threshold slider
   buttonX += BUTTON_WIDTH + margin;
@@ -252,6 +258,7 @@ void initGUI() {
   matchThresholdSlider.getCaptionLabel()
     .align(ControlP5.LEFT, ControlP5.TOP_OUTSIDE)
     .setPaddingX(0);
+
 
   // simulate signal buttons
   buttonX = margin;
@@ -269,6 +276,19 @@ void initGUI() {
   resetSimButton = ctrl.addButton(RESET_SIM_LABEL)
     .setSize(BUTTON_WIDTH, BUTTON_HEIGHT)
     .setPosition(buttonX, buttonY);
+
+
+  // clear button
+  buttonX += BUTTON_WIDTH + margin;
+  clearButton = ctrl.addButton(CLEAR_LABEL)
+    .setSize(BUTTON_WIDTH, BUTTON_HEIGHT)
+    .setPosition(buttonX, buttonY);
+}
+
+void clearAllRecordings() {
+  gesture1Recorder.clear();
+  gesture2Recorder.clear();
+  gesture3Recorder.clear();
 }
 
 void resetSimulation() {
@@ -280,6 +300,29 @@ void setMatchThreshold() {
   if (matchThresholdSlider != null) {
     matchThreshold = matchThresholdSlider.getValue();
   }
+}
+
+void startRecording() {
+  if (isRecording) {
+    return;
+  }
+
+  println("start recording");
+  setRecordingState(true);
+}
+
+void startSimulation() {
+  isSimulatingSignal = true;
+  resetSimulation();
+}
+
+void stopRecording() {
+  println("stop recording");
+  setRecordingState(false);
+}
+
+void stopSimulation() {
+  isSimulatingSignal = false;
 }
 
 
@@ -312,29 +355,9 @@ void setGyroMonitorsX(int _x) {
   gyroMonitors[2].x = _x;
 }
 
-void startRecording() {
-  if (isRecording) {
-    return;
-  }
-
-  println("start recording");
-
-  // set flag
-  isRecording = true;
-}
-
-void startSimulation() {
-  isSimulatingSignal = true;
-  resetSimulation();
-}
-
-void stopRecording() {
-  println("stop recording");
-  isRecording = false;
-}
-
-void stopSimulation() {
-  isSimulatingSignal = false;
+void setRecordingState(boolean newState) {
+  isRecording = newState;
+  recorders[targetRecorderIndex].isRecording = isRecording;
 }
 
 
@@ -440,10 +463,19 @@ void controlEvent(ControlEvent event) {
   if (controlName == RESET_SIM_LABEL) {
     resetSimulation();
   }
+  if (controlName == CLEAR_LABEL) {
+    stopRecording();
+    clearAllRecordings();
+  }
 }
 
 void keyPressed(KeyEvent event) {
   switch (keyCode) {
+    // 0
+    case 48:
+      clearAllRecordings();
+      break;
+
     // 1
     case 49:
       targetRecorderIndex = 0;
