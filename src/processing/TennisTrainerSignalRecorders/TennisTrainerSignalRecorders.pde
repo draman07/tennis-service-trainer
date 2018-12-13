@@ -4,24 +4,7 @@ import oscP5.*;
 import processing.serial.*;
 
 
-// port vars
-int PORT_INDEX = 3; // TODO: set to appropriate value
-int BAUD_RATE = 9600;
-int GYRO_DATA_LENGTH = 6;
-
-Serial port;
-
-
-// osc vars
-String OSC_ADDRESS = "/tennis";
-String RECIPIENT_IP = "127.0.0.1";
-int RECIPIENT_PORT = 9600;
-int LISTENING_PORT = 12800;
-OscP5 osc;
-NetAddress recipient;
-
-
-// control vars
+// gui vars
 ControlP5 ctrl;
 
 int BUTTON_WIDTH = 128;
@@ -48,8 +31,10 @@ float sineValue = 0;
 Boolean isRecording = false;
 Boolean hasRecording = false;
 
+float matchThreshold = 0.4;
 
-// signal monitors
+
+// signal monitors vars
 int HISTORY_LENGTH = 200;
 float GYRO_SCALE = 1000.;
 
@@ -64,8 +49,21 @@ SignalRecorder[] recorders = new SignalRecorder[3];
 int targetRecorderIndex = 0;
 
 
-// match variables
-float matchThreshold = 0.4;
+// osc vars
+String OSC_ADDRESS = "/tennis";
+String RECIPIENT_IP = "127.0.0.1";
+int RECIPIENT_PORT = 9600;
+int LISTENING_PORT = 12800;
+OscP5 osc;
+NetAddress recipient;
+
+
+// port vars
+int PORT_INDEX = 3; // TODO: set to appropriate value
+int BAUD_RATE = 9600;
+int GYRO_DATA_LENGTH = 6;
+
+Serial port;
 
 
 // PROCESSING METHODS
@@ -213,14 +211,8 @@ void draw() {
 
 
 // METHODS DEFINITIONS
-float getMean(float[] array) {
-  float sum = 0;
-  for (int i = 0; i < array.length; i++) {
-    sum += array[i];
-  }
-  return sum / array.length;
-}
 
+// gui methods
 void initGUI() {
   int margin = 16;
   int buttonX = margin;
@@ -273,6 +265,19 @@ void initGUI() {
     .setPosition(buttonX, buttonY);
 }
 
+void resetSimulation() {
+  sineStep = 0;
+  sineValue = 0;
+}
+
+void setMatchThreshold() {
+  if (matchThresholdSlider != null) {
+    matchThreshold = matchThresholdSlider.getValue();
+  }
+}
+
+
+// monitor methods
 void initGyroMonitors(int x, int y, int w, int h) {
   gyroMonitors = new SignalPlotter[3]; // x, y, z
   gyroMonitors[0] = new SignalPlotter(
@@ -295,6 +300,39 @@ void initGyroMonitors(int x, int y, int w, int h) {
   );
 }
 
+void setGyroMonitorsX(int _x) {
+  gyroMonitors[0].x = _x;
+  gyroMonitors[1].x = _x;
+  gyroMonitors[2].x = _x;
+}
+
+void startRecording() {
+  if (isRecording) {
+    return;
+  }
+
+  println("start recording");
+
+  // set flag
+  isRecording = true;
+}
+
+void startSimulation() {
+  isSimulatingSignal = true;
+  resetSimulation();
+}
+
+void stopRecording() {
+  println("stop recording");
+  isRecording = false;
+}
+
+void stopSimulation() {
+  isSimulatingSignal = false;
+}
+
+
+// osc & serial methods
 void initOSC() {
   osc = new OscP5(this, LISTENING_PORT);
   recipient = new NetAddress(RECIPIENT_IP, RECIPIENT_PORT);
@@ -356,11 +394,6 @@ GyroData pullDataFromPort() {
   return g;
 }
 
-void resetSimulation() {
-  sineStep = 0;
-  sineValue = 0;
-}
-
 void sendOSC() {
   OscMessage message = new OscMessage(OSC_ADDRESS);
 
@@ -376,43 +409,6 @@ void sendOSC() {
   message.add(matchThreshold);
 
   osc.send(message, recipient);
-}
-
-void setGyroMonitorsX(int _x) {
-  gyroMonitors[0].x = _x;
-  gyroMonitors[1].x = _x;
-  gyroMonitors[2].x = _x;
-}
-
-void setMatchThreshold() {
-  if (matchThresholdSlider != null) {
-    matchThreshold = matchThresholdSlider.getValue();
-  }
-}
-
-void startRecording() {
-  if (isRecording) {
-    return;
-  }
-
-  println("start recording");
-
-  // set flag
-  isRecording = true;
-}
-
-void startSimulation() {
-  isSimulatingSignal = true;
-  resetSimulation();
-}
-
-void stopRecording() {
-  println("stop recording");
-  isRecording = false;
-}
-
-void stopSimulation() {
-  isSimulatingSignal = false;
 }
 
 
