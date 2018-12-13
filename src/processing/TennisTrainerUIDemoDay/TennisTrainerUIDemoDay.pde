@@ -27,7 +27,7 @@ int CURSOR_MAX_Y = 577;
 
 
 // match vars
-int MATCH_DELAY = 1000;
+int MATCH_COOLDOWN = 1000;
 int MATCH_DISPLAY_DURATION = 500;
 
 PImage match1Image;
@@ -127,21 +127,21 @@ void initFullScreenButtons() {
 
 void detectMatch1() {
   if (c1Vector.y <= t1Vector.y && millis() > match1TimeEnd) {
-    match1TimeEnd = millis() + MATCH_DELAY;
+    match1TimeEnd = millis() + MATCH_COOLDOWN;
     m1VisibleEnd = millis() + MATCH_DISPLAY_DURATION;
   }
 }
 
 void detectMatch2() {
   if (c2Vector.y <= t1Vector.y && millis() > match2TimeEnd) {
-    match2TimeEnd = millis() + MATCH_DELAY;
+    match2TimeEnd = millis() + MATCH_COOLDOWN;
     m2VisibleEnd = millis() + MATCH_DISPLAY_DURATION;
   }
 }
 
 void detectMatch3() {
   if (c3Vector.y <= t1Vector.y && millis() > match3TimeEnd) {
-    match3TimeEnd = millis() + MATCH_DELAY;
+    match3TimeEnd = millis() + MATCH_COOLDOWN;
     m3VisibleEnd = millis() + MATCH_DISPLAY_DURATION;
   }
 }
