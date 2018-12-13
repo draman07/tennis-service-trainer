@@ -71,6 +71,8 @@ int BAUD_RATE = 9600;
 int GYRO_DATA_LENGTH = 6;
 
 Serial port;
+boolean isRacquetButtonPressed = false;
+boolean isRacquetButtonReleased = true;
 
 
 // PROCESSING METHODS
@@ -291,6 +293,13 @@ void clearAllRecordings() {
   gesture3Recorder.clear();
 }
 
+void resetStates() {
+  isRacquetButtonPressed = false;
+  isRacquetButtonReleased = true;
+
+  clearAllRecordings();
+}
+
 void resetSimulation() {
   sineStep = 0;
   sineValue = 0;
@@ -390,12 +399,12 @@ void initSerialPort() {
 }
 
 GyroData parsePortData(String raw) {
-  // data structure: GyroX, GyroY, GyroZ, AccelX, AccelY, AccelZ
   String temp[] = raw.split(",");
-  
+
   GyroData g = new GyroData();
 
   if (temp.length == GYRO_DATA_LENGTH) {
+    // data structure: GyroX, GyroY, GyroZ, AccelX, AccelY, AccelZ, 
     g.gyroX = float(temp[0]);
     g.gyroY = float(temp[1]);
     g.gyroZ = float(temp[2]);
@@ -404,9 +413,37 @@ GyroData parsePortData(String raw) {
     g.accelZ = float(temp[5]);
 
   } else if (temp.length == 3) {
+    // data structure: GyroX, GyroY, GyroZ
     g.gyroX = float(temp[0]);
     g.gyroY = float(temp[1]);
     g.gyroZ = float(temp[2]);
+
+  } else {
+    // data structure: GyroX, GyroY, GyroZ, isRacquetButtonPressed (0|1)
+    g.gyroX = float(temp[0]);
+    g.gyroY = float(temp[1]);
+    g.gyroZ = float(temp[2]);
+
+    if (isRacquetButtonReleased) {
+      if (temp[3] == 1) {
+        isRacquetButtonPressed = true;
+        isRacquetButtonReleased = false;
+        // TODO: what action triggered now?
+
+        if (!isRecording) {
+          startRecording();
+        } else {
+          stopRecording();
+        }
+      }
+    }
+    if (isRacquetButtonPressed) {
+      if (temp[3] == 0) {
+        isRacquetButtonReleased = true;
+        isRacquetButtonPressed = false;
+        // TODO: what action triggered now?
+      }
+    }
   }
 
   g.init();
@@ -465,7 +502,7 @@ void controlEvent(ControlEvent event) {
   }
   if (controlName == CLEAR_LABEL) {
     stopRecording();
-    clearAllRecordings();
+    resetStates();
   }
 }
 
@@ -473,7 +510,8 @@ void keyPressed(KeyEvent event) {
   switch (keyCode) {
     // 0
     case 48:
-      clearAllRecordings();
+      stopRecording();
+      resetStates();
       break;
 
     // 1
