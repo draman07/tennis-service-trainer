@@ -65,7 +65,7 @@ int targetRecorderIndex = 0;
 
 
 // match variables
-float matchThreshold = 1.75;
+float matchThreshold = 0.4;
 
 
 // PROCESSING METHODS
