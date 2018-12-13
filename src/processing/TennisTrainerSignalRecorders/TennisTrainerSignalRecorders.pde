@@ -4,6 +4,10 @@ import oscP5.*;
 import processing.serial.*;
 
 
+// images
+PImage bg;
+
+
 // gui vars
 ControlP5 ctrl;
 
@@ -71,6 +75,8 @@ void setup() {
   size(1280, 640, P2D);
   frameRate(60);
 
+  bg = loadImage("bg.png");
+
   initSerialPort();
   initOSC();
 
@@ -128,8 +134,7 @@ void setup() {
 }
 
 void draw() {
-  // draw bg
-  background(20);
+  image(bg, 0, 0);
 
   GyroData g = new GyroData();
 
