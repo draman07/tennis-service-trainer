@@ -369,6 +369,12 @@ void setRecordingState(boolean newState) {
   recorders[targetRecorderIndex].isRecording = isRecording;
 }
 
+void setTargetRecorder(int index) {
+  if (!isRecording) {
+    targetRecorderIndex = index;
+  }
+}
+
 
 // osc & serial methods
 void initOSC() {
@@ -516,17 +522,17 @@ void keyPressed(KeyEvent event) {
 
     // 1
     case 49:
-      targetRecorderIndex = 0;
+      setTargetRecorder(0);
       break;
 
     // 2
     case 50:
-      targetRecorderIndex = 1;
+      setTargetRecorder(1);
       break;
 
     // 3
     case 51:
-      targetRecorderIndex = 2;
+      setTargetRecorder(2);
       break;
 
     // spacebar
