@@ -10,7 +10,6 @@ class SignalRecorder {
   // VARS
   SignalPlotter[] recorders;
   SignalPlotter[] comparators;
-  float[] arrayOfZeroes;
 
   int x = 0;
   int y = 0;
@@ -50,11 +49,6 @@ class SignalRecorder {
     recorders = initMonitors(recorders, x, y);
     comparators = initMonitors(comparators, x, y + MARGIN_BOTTOM);
 
-    arrayOfZeroes = new float[HISTORY_LENGTH];
-    for (int i = 0; i < HISTORY_LENGTH; i++) {
-      arrayOfZeroes[i] = 0.;
-    }
-
     isInit = true;
   }
 
@@ -74,15 +68,15 @@ class SignalRecorder {
   }
 
   void clearComparators() {
-    comparators[0].setValues(arrayOfZeroes);
-    comparators[1].setValues(arrayOfZeroes);
-    comparators[2].setValues(arrayOfZeroes);
+    comparators[0].clear();
+    comparators[1].clear();
+    comparators[2].clear();
   }
 
   void clearRecorders() {
-    recorders[0].setValues(arrayOfZeroes);
-    recorders[1].setValues(arrayOfZeroes);
-    recorders[2].setValues(arrayOfZeroes);
+    recorders[0].clear();
+    recorders[1].clear();
+    recorders[2].clear();
     hasRecording = false;
   }
 
