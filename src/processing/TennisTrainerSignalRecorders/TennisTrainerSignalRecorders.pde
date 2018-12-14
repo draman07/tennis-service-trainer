@@ -425,7 +425,7 @@ GyroData parsePortData(String raw) {
     g.gyroZ = float(temp[2]);
 
     if (isRacquetButtonReleased) {
-      if (temp[3] == 1) {
+      if (int(temp[3]) == 1) {
         isRacquetButtonPressed = true;
         isRacquetButtonReleased = false;
         // TODO: what action triggered now?
@@ -438,7 +438,7 @@ GyroData parsePortData(String raw) {
       }
     }
     if (isRacquetButtonPressed) {
-      if (temp[3] == 0) {
+      if (int(temp[3]) == 0) {
         isRacquetButtonReleased = true;
         isRacquetButtonPressed = false;
         // TODO: what action triggered now?
