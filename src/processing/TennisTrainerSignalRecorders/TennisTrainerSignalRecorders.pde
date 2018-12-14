@@ -311,23 +311,9 @@ void setMatchThreshold() {
   }
 }
 
-void startRecording() {
-  if (isRecording) {
-    return;
-  }
-
-  println("start recording");
-  setRecordingState(true);
-}
-
 void startSimulation() {
   isSimulatingSignal = true;
   resetSimulation();
-}
-
-void stopRecording() {
-  println("stop recording");
-  setRecordingState(false);
 }
 
 void stopSimulation() {
@@ -366,13 +352,35 @@ void setGyroMonitorsX(int _x) {
 
 void setRecordingState(boolean newState) {
   isRecording = newState;
-  recorders[targetRecorderIndex].isRecording = isRecording;
+
+  SignalRecorder r = recorders[targetRecorderIndex];
+
+  if (isRecording) {
+    // clear recording and comparison
+    // before starting to record
+    r.clear();
+  }
+  r.isRecording = isRecording;
 }
 
 void setTargetRecorder(int index) {
   if (!isRecording) {
     targetRecorderIndex = index;
   }
+}
+
+void startRecording() {
+  if (isRecording) {
+    return;
+  }
+
+  println("start recording");
+  setRecordingState(true);
+}
+
+void stopRecording() {
+  println("stop recording");
+  setRecordingState(false);
 }
 
 
