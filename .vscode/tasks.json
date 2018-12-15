@@ -17,14 +17,14 @@
       },
       "args": [
 		"--force",
-		"--sketch=${workspaceRoot}/src/processing/tennis_trainer_gui",
+		"--sketch=${workspaceRoot}/src/processing/TennisTrainerSignalRecorders",
 		"--output=${workspaceRoot}/bin",
 		"--run"
 	  ],
       "windows": {
         "args": [
           "--force",
-          "--sketch=${workspaceRoot}\\src\\processing\\tennis_trainer_gui",
+          "--sketch=${workspaceRoot}\\src\\processing\\TennisTrainerSignalRecorders",
           "--output=${workspaceRoot}\\bin",
           "--run"
         ]

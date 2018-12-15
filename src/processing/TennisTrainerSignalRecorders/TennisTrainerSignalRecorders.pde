@@ -4,24 +4,11 @@ import oscP5.*;
 import processing.serial.*;
 
 
-// port vars
-int PORT_INDEX = 3; // TODO: set to appropriate value
-int BAUD_RATE = 9600;
-int GYRO_DATA_LENGTH = 6;
-
-Serial port;
+// images
+PImage bg;
 
 
-// osc vars
-String OSC_ADDRESS = "/tennis";
-String RECIPIENT_IP = "127.0.0.1";
-int RECIPIENT_PORT = 9600;
-int LISTENING_PORT = 12800;
-OscP5 osc;
-NetAddress recipient;
-
-
-// control vars
+// gui vars
 ControlP5 ctrl;
 
 int BUTTON_WIDTH = 128;
@@ -45,12 +32,17 @@ Boolean isSimulatingSignal = false;
 float sineStep = 0;
 float sineValue = 0;
 
+String CLEAR_LABEL = "Clear";
+Button clearButton;
+
 Boolean isRecording = false;
 Boolean hasRecording = false;
 
+float matchThreshold = 0.4;
 
-// signal monitors
-int HISTORY_LENGTH = 160;
+
+// signal monitors vars
+int HISTORY_LENGTH = 100;
 float GYRO_SCALE = 1000.;
 
 SignalPlotter[] gyroMonitors;
@@ -61,17 +53,34 @@ SignalRecorder gesture2Recorder;
 SignalRecorder gesture3Recorder;
 SignalRecorder[] recorders = new SignalRecorder[3];
 
-int targetRecorderIndex = 0;
+int targetRecorderIndex = 1;
 
 
-// match variables
-float matchThreshold = 1.75;
+// osc vars
+String OSC_ADDRESS = "/tennis";
+String RECIPIENT_IP = "127.0.0.1";
+int RECIPIENT_PORT = 9600;
+int LISTENING_PORT = 12800;
+OscP5 osc;
+NetAddress recipient;
+
+
+// port vars
+int PORT_INDEX = 3; // TODO: set to appropriate value
+int BAUD_RATE = 9600;
+int GYRO_DATA_LENGTH = 6;
+
+Serial port;
+boolean isRacquetButtonPressed = false;
+boolean isRacquetButtonReleased = true;
 
 
 // PROCESSING METHODS
 void setup() {
   size(1280, 640, P2D);
   frameRate(60);
+
+  bg = loadImage("bg.png");
 
   initSerialPort();
   initOSC();
@@ -92,6 +101,7 @@ void setup() {
     monitorX, monitorY,
     monitorWidth, monitorHeight
   );
+  setGyroMonitorsX(MONITOR_X_POSITIONS[targetRecorderIndex]);
 
   // rec 1 monitor
   monitorX = MONITOR_X_POSITIONS[0];
@@ -130,8 +140,7 @@ void setup() {
 }
 
 void draw() {
-  // draw bg
-  background(20);
+  image(bg, 0, 0);
 
   GyroData g = new GyroData();
 
@@ -151,25 +160,29 @@ void draw() {
     if (port != null) {
       while (port.available() > 0) {
         g = pullDataFromPort();
-        g.gyroX /= GYRO_SCALE;
-        g.gyroY /= GYRO_SCALE;
-        g.gyroZ /= GYRO_SCALE;
+        if (g != null && g.isInit) {
+          g.gyroX /= GYRO_SCALE;
+          g.gyroY /= GYRO_SCALE;
+          g.gyroZ /= GYRO_SCALE;
+        }
       }
     }
   }
 
-  if (g != null && g.isInit) {
+  // assign gyro values to monitors
+  if (g.gyroX != 0. && g.gyroY != 0. && g.gyroZ != 0.) {
+    // set values
     gyroMonitors[0].update(g.gyroX);
     gyroMonitors[1].update(g.gyroY);
     gyroMonitors[2].update(g.gyroZ);
-  }
 
-  if (isRecording) {
-    recorders[targetRecorderIndex].record(
-      gyroMonitors[0].getLatestValue(),
-      gyroMonitors[1].getLatestValue(),
-      gyroMonitors[2].getLatestValue()
-    );
+    if (isRecording) {
+      recorders[targetRecorderIndex].record(
+        g.gyroX,
+        g.gyroY,
+        g.gyroZ
+      );
+    }
   }
 
   if (gesture1Recorder.hasRecording) {
@@ -209,32 +222,29 @@ void draw() {
 
 
 // METHODS DEFINITIONS
-float getMean(float[] array) {
-  float sum = 0;
-  for (int i = 0; i < array.length; i++) {
-    sum += array[i];
-  }
-  return sum / array.length;
-}
 
+// gui methods
 void initGUI() {
   int margin = 16;
   int buttonX = margin;
   int buttonY = 0;
   ctrl = new ControlP5(this);
-  
+
+
   // start recording button
   buttonX = margin;
   buttonY = height - 2 * (BUTTON_HEIGHT + margin);
   startRecButton = ctrl.addButton(START_REC_LABEL)
     .setSize(BUTTON_WIDTH, BUTTON_HEIGHT)
     .setPosition(buttonX, buttonY);
-  
+
+
   // stop recording button
   buttonX += BUTTON_WIDTH + margin;
   stopRecButton = ctrl.addButton(STOP_REC_LABEL)
     .setSize(BUTTON_WIDTH, BUTTON_HEIGHT)
     .setPosition(buttonX, buttonY);
+
 
   // match threshold slider
   buttonX += BUTTON_WIDTH + margin;
@@ -250,6 +260,7 @@ void initGUI() {
   matchThresholdSlider.getCaptionLabel()
     .align(ControlP5.LEFT, ControlP5.TOP_OUTSIDE)
     .setPaddingX(0);
+
 
   // simulate signal buttons
   buttonX = margin;
@@ -267,8 +278,50 @@ void initGUI() {
   resetSimButton = ctrl.addButton(RESET_SIM_LABEL)
     .setSize(BUTTON_WIDTH, BUTTON_HEIGHT)
     .setPosition(buttonX, buttonY);
+
+
+  // clear button
+  buttonX += BUTTON_WIDTH + margin;
+  clearButton = ctrl.addButton(CLEAR_LABEL)
+    .setSize(BUTTON_WIDTH, BUTTON_HEIGHT)
+    .setPosition(buttonX, buttonY);
 }
 
+void clearAllRecordings() {
+  gesture1Recorder.clear();
+  gesture2Recorder.clear();
+  gesture3Recorder.clear();
+}
+
+void resetStates() {
+  isRacquetButtonPressed = false;
+  isRacquetButtonReleased = true;
+
+  clearAllRecordings();
+}
+
+void resetSimulation() {
+  sineStep = 0;
+  sineValue = 0;
+}
+
+void setMatchThreshold() {
+  if (matchThresholdSlider != null) {
+    matchThreshold = matchThresholdSlider.getValue();
+  }
+}
+
+void startSimulation() {
+  isSimulatingSignal = true;
+  resetSimulation();
+}
+
+void stopSimulation() {
+  isSimulatingSignal = false;
+}
+
+
+// monitor methods
 void initGyroMonitors(int x, int y, int w, int h) {
   gyroMonitors = new SignalPlotter[3]; // x, y, z
   gyroMonitors[0] = new SignalPlotter(
@@ -291,6 +344,47 @@ void initGyroMonitors(int x, int y, int w, int h) {
   );
 }
 
+void setGyroMonitorsX(int _x) {
+  gyroMonitors[0].x = _x;
+  gyroMonitors[1].x = _x;
+  gyroMonitors[2].x = _x;
+}
+
+void setRecordingState(boolean newState) {
+  isRecording = newState;
+
+  SignalRecorder r = recorders[targetRecorderIndex];
+
+  if (isRecording) {
+    // clear recording and comparison
+    // before starting to record
+    r.clear();
+  }
+  r.isRecording = isRecording;
+}
+
+void setTargetRecorder(int index) {
+  if (!isRecording) {
+    targetRecorderIndex = index;
+  }
+}
+
+void startRecording() {
+  if (isRecording) {
+    return;
+  }
+
+  println("start recording");
+  setRecordingState(true);
+}
+
+void stopRecording() {
+  println("stop recording");
+  setRecordingState(false);
+}
+
+
+// osc & serial methods
 void initOSC() {
   osc = new OscP5(this, LISTENING_PORT);
   recipient = new NetAddress(RECIPIENT_IP, RECIPIENT_PORT);
@@ -319,12 +413,14 @@ void initSerialPort() {
 }
 
 GyroData parsePortData(String raw) {
-  // data structure: GyroX, GyroY, GyroZ, AccelX, AccelY, AccelZ
   String temp[] = raw.split(",");
-  
+
   GyroData g = new GyroData();
 
-  if (temp.length == GYRO_DATA_LENGTH) {
+  int portDataLength = temp.length;
+  // println("portDataLength: "+portDataLength);
+  if (portDataLength == GYRO_DATA_LENGTH) {
+    // data structure: GyroX, GyroY, GyroZ, AccelX, AccelY, AccelZ, 
     g.gyroX = float(temp[0]);
     g.gyroY = float(temp[1]);
     g.gyroZ = float(temp[2]);
@@ -332,10 +428,44 @@ GyroData parsePortData(String raw) {
     g.accelY = float(temp[4]);
     g.accelZ = float(temp[5]);
 
-  } else if (temp.length == 3) {
+  } else if (portDataLength == 3) {
+    // data structure: GyroX, GyroY, GyroZ
     g.gyroX = float(temp[0]);
     g.gyroY = float(temp[1]);
     g.gyroZ = float(temp[2]);
+
+  } else if (portDataLength == 4) {
+    // data structure: GyroX, GyroY, GyroZ, isRacquetButtonPressed (0|1)
+    g.gyroX = float(temp[0]);
+    g.gyroY = float(temp[1]);
+    g.gyroZ = float(temp[2]);
+
+    // String buttonValue = temp[3];
+    // println("buttonValue: " + buttonValue);
+    // println("buttonValue == 1: " + buttonValue == 1);
+    // println("buttonValue == '1': " + buttonValue.equals(1));
+    // println("isRacquetButtonReleased: " + isRacquetButtonReleased);
+    // println("isRacquetButtonPressed: " + isRacquetButtonPressed);
+    // if (isRacquetButtonReleased) {
+    //   if (buttonValue == "1") {
+    //     isRacquetButtonPressed = true;
+    //     isRacquetButtonReleased = false;
+    //     // TODO: what action triggered now?
+
+    //     if (!isRecording) {
+    //       startRecording();
+    //     } else {
+    //       stopRecording();
+    //     }
+    //   }
+    // }
+    // if (isRacquetButtonPressed) {
+    //   if (buttonValue == "0") {
+    //     isRacquetButtonReleased = true;
+    //     isRacquetButtonPressed = false;
+    //     // TODO: what action triggered now?
+    //   }
+    // }
   }
 
   g.init();
@@ -350,11 +480,6 @@ GyroData pullDataFromPort() {
     g = parsePortData(incoming);
   }
   return g;
-}
-
-void resetSimulation() {
-  sineStep = 0;
-  sineValue = 0;
 }
 
 void sendOSC() {
@@ -372,43 +497,6 @@ void sendOSC() {
   message.add(matchThreshold);
 
   osc.send(message, recipient);
-}
-
-void setGyroMonitorsX(int _x) {
-  gyroMonitors[0].x = _x;
-  gyroMonitors[1].x = _x;
-  gyroMonitors[2].x = _x;
-}
-
-void setMatchThreshold() {
-  if (matchThresholdSlider != null) {
-    matchThreshold = matchThresholdSlider.getValue();
-  }
-}
-
-void startRecording() {
-  if (isRecording) {
-    return;
-  }
-
-  println("start recording");
-
-  // set flag
-  isRecording = true;
-}
-
-void startSimulation() {
-  isSimulatingSignal = true;
-  resetSimulation();
-}
-
-void stopRecording() {
-  println("stop recording");
-  isRecording = false;
-}
-
-void stopSimulation() {
-  isSimulatingSignal = false;
 }
 
 
@@ -434,24 +522,43 @@ void controlEvent(ControlEvent event) {
   if (controlName == RESET_SIM_LABEL) {
     resetSimulation();
   }
+  if (controlName == CLEAR_LABEL) {
+    stopRecording();
+    resetStates();
+  }
 }
 
 void keyPressed(KeyEvent event) {
   switch (keyCode) {
+    // 0
+    case 48:
+      stopRecording();
+      resetStates();
+      break;
+
     // 1
     case 49:
-      targetRecorderIndex = 0;
+      setTargetRecorder(0);
       break;
 
     // 2
     case 50:
-      targetRecorderIndex = 1;
+      setTargetRecorder(1);
       break;
 
     // 3
     case 51:
-      targetRecorderIndex = 2;
+      setTargetRecorder(2);
       break;
+
+    // spacebar
+    case 32:
+      if (!isRecording) {
+        startRecording();
+      } else {
+        stopRecording();
+      }
+      break;	
   }
   setGyroMonitorsX(MONITOR_X_POSITIONS[targetRecorderIndex]);
 }

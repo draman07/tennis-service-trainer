@@ -12,6 +12,8 @@ class SignalPlotter {
 
   // values variables
   float[] values;
+  float[] arrayOfZeroes;
+
   int historyLength;
   int index;
 
@@ -32,6 +34,8 @@ class SignalPlotter {
     values = new float[historyLength];
     index = 0;
     stepSize = w / (float)historyLength;
+
+    generateArrayOfZeroes();
   }
 
 
@@ -52,6 +56,10 @@ class SignalPlotter {
     updatedArray[lastIndex] = value;
     
     return updatedArray;
+  }
+
+  void clear() {
+    setValues(arrayOfZeroes);
   }
 
   void draw() {
@@ -129,6 +137,13 @@ class SignalPlotter {
   float getRangeSize() {
     float[] r = getRange();
     return abs(r[1] - r[0]);
+  }
+
+  void generateArrayOfZeroes() {
+    arrayOfZeroes = new float[historyLength];
+    for (int i = 0; i < historyLength; i++) {
+      arrayOfZeroes[i] = 0.;
+    }
   }
 
   void setValues(float[] newValues) {
