@@ -42,7 +42,7 @@ float matchThreshold = 0.4;
 
 
 // signal monitors vars
-int HISTORY_LENGTH = 200;
+int HISTORY_LENGTH = 100;
 float GYRO_SCALE = 1000.;
 
 SignalPlotter[] gyroMonitors;
@@ -417,7 +417,9 @@ GyroData parsePortData(String raw) {
 
   GyroData g = new GyroData();
 
-  if (temp.length == GYRO_DATA_LENGTH) {
+  int portDataLength = temp.length;
+  // println("portDataLength: "+portDataLength);
+  if (portDataLength == GYRO_DATA_LENGTH) {
     // data structure: GyroX, GyroY, GyroZ, AccelX, AccelY, AccelZ, 
     g.gyroX = float(temp[0]);
     g.gyroY = float(temp[1]);
@@ -426,38 +428,44 @@ GyroData parsePortData(String raw) {
     g.accelY = float(temp[4]);
     g.accelZ = float(temp[5]);
 
-  } else if (temp.length == 3) {
+  } else if (portDataLength == 3) {
     // data structure: GyroX, GyroY, GyroZ
     g.gyroX = float(temp[0]);
     g.gyroY = float(temp[1]);
     g.gyroZ = float(temp[2]);
 
-  } else {
+  } else if (portDataLength == 4) {
     // data structure: GyroX, GyroY, GyroZ, isRacquetButtonPressed (0|1)
     g.gyroX = float(temp[0]);
     g.gyroY = float(temp[1]);
     g.gyroZ = float(temp[2]);
 
-    if (isRacquetButtonReleased) {
-      if (int(temp[3]) == 1) {
-        isRacquetButtonPressed = true;
-        isRacquetButtonReleased = false;
-        // TODO: what action triggered now?
+    // String buttonValue = temp[3];
+    // println("buttonValue: " + buttonValue);
+    // println("buttonValue == 1: " + buttonValue == 1);
+    // println("buttonValue == '1': " + buttonValue.equals(1));
+    // println("isRacquetButtonReleased: " + isRacquetButtonReleased);
+    // println("isRacquetButtonPressed: " + isRacquetButtonPressed);
+    // if (isRacquetButtonReleased) {
+    //   if (buttonValue == "1") {
+    //     isRacquetButtonPressed = true;
+    //     isRacquetButtonReleased = false;
+    //     // TODO: what action triggered now?
 
-        if (!isRecording) {
-          startRecording();
-        } else {
-          stopRecording();
-        }
-      }
-    }
-    if (isRacquetButtonPressed) {
-      if (int(temp[3]) == 0) {
-        isRacquetButtonReleased = true;
-        isRacquetButtonPressed = false;
-        // TODO: what action triggered now?
-      }
-    }
+    //     if (!isRecording) {
+    //       startRecording();
+    //     } else {
+    //       stopRecording();
+    //     }
+    //   }
+    // }
+    // if (isRacquetButtonPressed) {
+    //   if (buttonValue == "0") {
+    //     isRacquetButtonReleased = true;
+    //     isRacquetButtonPressed = false;
+    //     // TODO: what action triggered now?
+    //   }
+    // }
   }
 
   g.init();
