@@ -42,7 +42,7 @@ float matchThreshold = 0.4;
 
 
 // signal monitors vars
-int HISTORY_LENGTH = 200;
+int HISTORY_LENGTH = 100;
 float GYRO_SCALE = 1000.;
 
 SignalPlotter[] gyroMonitors;
